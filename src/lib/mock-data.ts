@@ -36,6 +36,85 @@ export const lowStockItems: StockItem[] = [
   { id: "ST-05", name: "Iron-on Patches Base", category: "Accessory", remaining: 18, total: 120, unit: "sheets" },
 ];
 
+export type InventoryCategory = "Thread" | "Fabric" | "Backing" | "Accessory" | "Design";
+
+export type InventoryItem = {
+  id: string;
+  name: string;
+  sku: string;
+  category: InventoryCategory;
+  unit: string;
+  quantity: number;
+  reorderLevel: number;
+  unitCost: number;
+  supplier: string;
+};
+
+export const inventoryItems: InventoryItem[] = [
+  { id: "INV-IT-01", name: "Gold Metallic Thread", sku: "TH-GLD-40", category: "Thread", unit: "spools", quantity: 8, reorderLevel: 25, unitCost: 145, supplier: "Madeira India" },
+  { id: "INV-IT-02", name: "Cotton Twill Fabric – Navy", sku: "FB-TWL-NV", category: "Fabric", unit: "meters", quantity: 14, reorderLevel: 40, unitCost: 220, supplier: "Raymond Fabrics" },
+  { id: "INV-IT-03", name: "Backing Stabilizer (Cut-away)", sku: "BK-CTW-75", category: "Backing", unit: "rolls", quantity: 22, reorderLevel: 30, unitCost: 380, supplier: "Pellon Supplies" },
+  { id: "INV-IT-04", name: "Polyester Thread – White", sku: "TH-PLY-WHT", category: "Thread", unit: "spools", quantity: 31, reorderLevel: 50, unitCost: 95, supplier: "Madeira India" },
+  { id: "INV-IT-05", name: "Iron-on Patches Base", sku: "AC-PCH-BS", category: "Accessory", unit: "sheets", quantity: 18, reorderLevel: 25, unitCost: 60, supplier: "Patchwork Co." },
+  { id: "INV-IT-06", name: "Black Polyester Thread", sku: "TH-PLY-BLK", category: "Thread", unit: "spools", quantity: 86, reorderLevel: 50, unitCost: 95, supplier: "Madeira India" },
+  { id: "INV-IT-07", name: "Pique Polo Fabric – White", sku: "FB-PIQ-WHT", category: "Fabric", unit: "meters", quantity: 120, reorderLevel: 40, unitCost: 260, supplier: "Raymond Fabrics" },
+  { id: "INV-IT-08", name: "Tearaway Stabilizer", sku: "BK-TRW-50", category: "Backing", unit: "rolls", quantity: 64, reorderLevel: 30, unitCost: 310, supplier: "Pellon Supplies" },
+  { id: "INV-IT-09", name: "Woven Name Labels", sku: "AC-LBL-WV", category: "Accessory", unit: "sheets", quantity: 142, reorderLevel: 50, unitCost: 18, supplier: "Patchwork Co." },
+  { id: "INV-IT-10", name: "Team Crest – Digitized Design", sku: "DS-CRST-01", category: "Design", unit: "files", quantity: 1, reorderLevel: 0, unitCost: 0, supplier: "In-house" },
+  { id: "INV-IT-11", name: "School Emblem – Digitized Design", sku: "DS-EMBL-02", category: "Design", unit: "files", quantity: 1, reorderLevel: 0, unitCost: 0, supplier: "In-house" },
+  { id: "INV-IT-12", name: "Silver Metallic Thread", sku: "TH-SLV-40", category: "Thread", unit: "spools", quantity: 47, reorderLevel: 25, unitCost: 145, supplier: "Madeira India" },
+];
+
+export type StockMovementType = "in" | "out" | "adjustment";
+
+export type StockMovement = {
+  id: string;
+  itemName: string;
+  type: StockMovementType;
+  quantity: number;
+  unit: string;
+  date: string;
+  reference: string;
+  performedBy: string;
+};
+
+export const stockMovements: StockMovement[] = [
+  { id: "MV-501", itemName: "Gold Metallic Thread", type: "out", quantity: 12, unit: "spools", date: "18 Jun 2026", reference: "ORD-3301", performedBy: "Riya Sharma" },
+  { id: "MV-502", itemName: "Pique Polo Fabric – White", type: "in", quantity: 100, unit: "meters", date: "17 Jun 2026", reference: "PO-1182", performedBy: "Karthik Iyer" },
+  { id: "MV-503", itemName: "Tearaway Stabilizer", type: "out", quantity: 18, unit: "rolls", date: "17 Jun 2026", reference: "ORD-3302", performedBy: "Riya Sharma" },
+  { id: "MV-504", itemName: "Cotton Twill Fabric – Navy", type: "adjustment", quantity: -6, unit: "meters", date: "16 Jun 2026", reference: "Stock count", performedBy: "Karthik Iyer" },
+  { id: "MV-505", itemName: "Woven Name Labels", type: "in", quantity: 200, unit: "sheets", date: "15 Jun 2026", reference: "PO-1179", performedBy: "Karthik Iyer" },
+  { id: "MV-506", itemName: "Black Polyester Thread", type: "out", quantity: 24, unit: "spools", date: "14 Jun 2026", reference: "ORD-3304", performedBy: "Riya Sharma" },
+  { id: "MV-507", itemName: "Backing Stabilizer (Cut-away)", type: "out", quantity: 15, unit: "rolls", date: "13 Jun 2026", reference: "ORD-3303", performedBy: "Riya Sharma" },
+  { id: "MV-508", itemName: "Silver Metallic Thread", type: "in", quantity: 50, unit: "spools", date: "11 Jun 2026", reference: "PO-1175", performedBy: "Karthik Iyer" },
+];
+
+export type ClientType = "Firm" | "Individual";
+
+export type Client = {
+  id: string;
+  name: string;
+  type: ClientType;
+  contactPerson: string;
+  email: string;
+  phone: string;
+  address: string;
+  totalBilled: number;
+  outstanding: number;
+  initials: string;
+};
+
+export const clients: Client[] = [
+  { id: "CL-01", name: "Aarav Textiles Pvt Ltd", type: "Firm", contactPerson: "Aarav Shah", email: "aarav@aaravtextiles.in", phone: "+91 98200 11223", address: "MIDC, Andheri East, Mumbai", totalBilled: 248250, outstanding: 0, initials: "AT" },
+  { id: "CL-02", name: "Riviera Sports Club", type: "Firm", contactPerson: "Meera Nair", email: "meera@rivierasc.com", phone: "+91 99870 44556", address: "Bandra West, Mumbai", totalBilled: 96800, outstanding: 12800, initials: "RS" },
+  { id: "CL-03", name: "Sunrise Uniforms Co.", type: "Firm", contactPerson: "Karan Patel", email: "karan@sunriseuniforms.in", phone: "+91 90040 77881", address: "Naroda, Ahmedabad", totalBilled: 64200, outstanding: 9650, initials: "SU" },
+  { id: "CL-04", name: "Bloom Bridal Studio", type: "Individual", contactPerson: "Ishita Rao", email: "ishita.rao@bloomstudio.in", phone: "+91 97120 33445", address: "Koramangala, Bengaluru", totalBilled: 132100, outstanding: 0, initials: "BB" },
+  { id: "CL-05", name: "Falcon Corporate Wear", type: "Firm", contactPerson: "Devansh Mehta", email: "devansh@falconwear.com", phone: "+91 98330 22118", address: "Sector 18, Gurugram", totalBilled: 78900, outstanding: 18900, initials: "FC" },
+  { id: "CL-06", name: "Lotus School Uniforms", type: "Firm", contactPerson: "Priya Iyer", email: "priya@lotusschool.in", phone: "+91 96500 88321", address: "Adyar, Chennai", totalBilled: 187400, outstanding: 7400, initials: "LS" },
+  { id: "CL-07", name: "Nikhil Verma", type: "Individual", contactPerson: "Nikhil Verma", email: "nikhil.verma@gmail.com", phone: "+91 88990 12345", address: "Indiranagar, Bengaluru", totalBilled: 5400, outstanding: 0, initials: "NV" },
+  { id: "CL-08", name: "Studio Eleven Apparel", type: "Firm", contactPerson: "Sana Khan", email: "sana@studioeleven.co", phone: "+91 91670 55667", address: "Lower Parel, Mumbai", totalBilled: 41200, outstanding: 0, initials: "SE" },
+];
+
 export type Order = {
   id: string;
   client: string;
@@ -50,6 +129,8 @@ export const activeOrders: Order[] = [
   { id: "ORD-3302", client: "Falcon Corporate Wear", design: "Logo – Full Back", quantity: 120, status: "queued", eta: "24 Jun 2026" },
   { id: "ORD-3303", client: "Bloom Bridal Studio", design: "Custom Monogram", quantity: 6, status: "completed", eta: "18 Jun 2026" },
   { id: "ORD-3304", client: "Lotus School Uniforms", design: "School Emblem", quantity: 500, status: "delayed", eta: "19 Jun 2026" },
+  { id: "ORD-3305", client: "Sunrise Uniforms Co.", design: "Company Initials – Cuff", quantity: 180, status: "queued", eta: "26 Jun 2026" },
+  { id: "ORD-3306", client: "Studio Eleven Apparel", design: "Brand Wordmark – Chest", quantity: 60, status: "in-production", eta: "23 Jun 2026" },
 ];
 
 export type ActivityItem = {

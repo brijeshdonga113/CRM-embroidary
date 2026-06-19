@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Bell, Menu, Plus, Scissors, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,7 +45,11 @@ export function Topbar() {
       </div>
 
       <div className="ml-auto flex items-center gap-2">
-        <Button size="sm" className="hidden gap-1.5 sm:inline-flex">
+        <Button
+          size="sm"
+          className="hidden gap-1.5 sm:inline-flex"
+          render={<Link href="/billing/new" />}
+        >
           <Plus className="size-4" />
           New Invoice
         </Button>

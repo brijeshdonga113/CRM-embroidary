@@ -1,18 +1,46 @@
-import { Building2 } from "lucide-react";
-import { ComingSoon } from "@/components/layout/coming-soon";
+import Link from "next/link";
+import { Banknote, Building2, Plus, User } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { StatCard } from "@/components/dashboard/stat-card";
+import { ClientsTable } from "@/components/clients/clients-table";
+import { PageHeader } from "@/components/layout/page-header";
+import { clients } from "@/lib/mock-data";
+import { formatINR } from "@/lib/format";
 
 export default function ClientsPage() {
+  const firmCount = clients.filter((c) => c.type === "Firm").length;
+  const individualCount = clients.filter((c) => c.type === "Individual").length;
+  const totalOutstanding = clients.reduce((sum, c) => sum + c.outstanding, 0);
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold tracking-tight">Clients & Firms</h1>
-        <p className="text-sm text-muted-foreground">Companies and individuals you bill and ship to</p>
-      </div>
-      <ComingSoon
-        icon={Building2}
-        title="Client directory coming soon"
-        description="Maintain firm and individual client profiles, billing addresses, and contact history."
+      <PageHeader
+        title="Clients & Firms"
+        description="Companies and individuals you bill and ship to"
+        action={
+          <Button render={<Link href="/clients/new" />} className="gap-1.5">
+            <Plus className="size-4" />
+            Add Client
+          </Button>
+        }
       />
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <StatCard label="Firms" value={String(firmCount)} icon={Building2} />
+        <StatCard label="Individuals" value={String(individualCount)} icon={User} />
+        <StatCard label="Total Outstanding" value={formatINR(totalOutstanding)} icon={Banknote} />
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base font-semibold">Directory</CardTitle>
+          <CardDescription>Firm and individual client profiles</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ClientsTable clients={clients} />
+        </CardContent>
+      </Card>
     </div>
   );
 }
