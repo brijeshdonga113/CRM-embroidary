@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Plus, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,9 +13,9 @@ import { Separator } from "@/components/ui/separator";
 import { PageHeader } from "@/components/layout/page-header";
 import { FormField } from "@/components/forms/form-field";
 import { FormFooter } from "@/components/forms/form-footer";
-import { useFakeSubmit } from "@/hooks/use-fake-submit";
-import { clients } from "@/lib/mock-data";
-import { formatINR } from "@/lib/format";
+import { useClients } from "@/lib/firestore/clients";
+import { createInvoice } from "@/lib/firestore/invoices";
+import { formatINR, formatDateDisplay } from "@/lib/format";
 
 type LineItem = {
   id: string;
@@ -29,9 +30,19 @@ function createLineItem(): LineItem {
 }
 
 export default function NewInvoicePage() {
-  const { saving, submit } = useFakeSubmit("/billing");
+  const router = useRouter();
+  const { clients, loading: clientsLoading } = useClients();
+
+  const [clientId, setClientId] = useState("");
+  const [invoiceDate, setInvoiceDate] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [notes, setNotes] = useState("");
   const [lineItems, setLineItems] = useState<LineItem[]>([createLineItem()]);
   const [taxRate, setTaxRate] = useState(18);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const selectedClientId = clientId || clients[0]?.id || "";
 
   const subtotal = useMemo(
     () => lineItems.reduce((sum, item) => sum + item.quantity * item.rate, 0),
@@ -52,28 +63,73 @@ export default function NewInvoicePage() {
     setLineItems((prev) => (prev.length > 1 ? prev.filter((item) => item.id !== id) : prev));
   }
 
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const client = clients.find((c) => c.id === selectedClientId);
+    if (!client) {
+      setError("Select a client before creating the invoice.");
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+    try {
+      await createInvoice({
+        firm: client.name,
+        contact: client.contactPerson || client.name,
+        amount: total,
+        status: "pending",
+        dueDate: formatDateDisplay(dueDate),
+        initials: client.initials,
+      });
+      router.push("/billing");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not create invoice. Please try again.");
+      setSaving(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader backHref="/billing" title="New Invoice" description="Bill a firm or individual client" />
 
       <Card>
         <CardContent className="space-y-6 pt-6">
-          <form onSubmit={submit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <FormField label="Client" htmlFor="invoice-client" required>
-                <NativeSelect id="invoice-client" defaultValue={clients[0]?.name} required>
+                <NativeSelect
+                  id="invoice-client"
+                  value={selectedClientId}
+                  onChange={(e) => setClientId(e.target.value)}
+                  disabled={clientsLoading || clients.length === 0}
+                  required
+                >
+                  {clients.length === 0 && <option value="">No clients yet</option>}
                   {clients.map((client) => (
-                    <option key={client.id} value={client.name}>
+                    <option key={client.id} value={client.id}>
                       {client.name}
                     </option>
                   ))}
                 </NativeSelect>
               </FormField>
               <FormField label="Invoice Date" htmlFor="invoice-date" required>
-                <Input id="invoice-date" type="date" required />
+                <Input
+                  id="invoice-date"
+                  type="date"
+                  value={invoiceDate}
+                  onChange={(e) => setInvoiceDate(e.target.value)}
+                  required
+                />
               </FormField>
               <FormField label="Due Date" htmlFor="invoice-due" required>
-                <Input id="invoice-due" type="date" required />
+                <Input
+                  id="invoice-due"
+                  type="date"
+                  value={dueDate}
+                  onChange={(e) => setDueDate(e.target.value)}
+                  required
+                />
               </FormField>
             </div>
 
@@ -146,7 +202,13 @@ export default function NewInvoicePage() {
             </div>
 
             <FormField label="Notes" htmlFor="invoice-notes">
-              <Textarea id="invoice-notes" rows={3} placeholder="Payment terms, bank details, or other notes" />
+              <Textarea
+                id="invoice-notes"
+                rows={3}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Payment terms, bank details, or other notes"
+              />
             </FormField>
 
             <Separator />
@@ -176,6 +238,8 @@ export default function NewInvoicePage() {
                 <span>{formatINR(total)}</span>
               </div>
             </div>
+
+            {error && <p className="text-sm text-destructive">{error}</p>}
 
             <FormFooter cancelHref="/billing" saving={saving} saveLabel="Create Invoice" />
           </form>

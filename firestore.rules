@@ -1,0 +1,32 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Single-workspace model: any signed-in user (your staff) has full
+    // access to all business data. Revisit if you need per-user scoping
+    // or role-based permissions later.
+    match /invoices/{invoiceId} {
+      allow read, write: if isSignedIn();
+    }
+    match /clients/{clientId} {
+      allow read, write: if isSignedIn();
+    }
+    match /inventoryItems/{itemId} {
+      allow read, write: if isSignedIn();
+    }
+    match /stockMovements/{movementId} {
+      allow read, write: if isSignedIn();
+    }
+    match /orders/{orderId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

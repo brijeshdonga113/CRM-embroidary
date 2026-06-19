@@ -14,6 +14,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FollowUpSheet } from "@/components/billing/follow-up-sheet";
 import { type Invoice, type InvoiceStatus } from "@/lib/mock-data";
+import { markReminderSent } from "@/lib/firestore/invoices";
 import { formatINR } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -105,13 +106,14 @@ export function InvoiceTable({
                   <FollowUpSheet
                     invoice={invoice}
                     sent={sentIds.has(invoice.id)}
-                    onSent={() =>
+                    onSent={() => {
                       setSentIds((prev) => {
                         const next = new Set(prev);
                         next.add(invoice.id);
                         return next;
-                      })
-                    }
+                      });
+                      void markReminderSent(invoice.id);
+                    }}
                   />
                 ) : (
                   <span className="text-xs text-muted-foreground">—</span>

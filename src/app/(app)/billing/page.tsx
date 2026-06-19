@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { AlertCircle, Banknote, CircleCheck, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -5,10 +7,12 @@ import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { InvoiceTable } from "@/components/billing/invoice-table";
 import { PageHeader } from "@/components/layout/page-header";
-import { invoices } from "@/lib/mock-data";
+import { useInvoices } from "@/lib/firestore/invoices";
 import { formatINR } from "@/lib/format";
 
 export default function BillingPage() {
+  const { invoices, loading } = useInvoices();
+
   const outstanding = invoices
     .filter((i) => i.status !== "paid")
     .reduce((sum, i) => sum + i.amount, 0);
@@ -40,7 +44,15 @@ export default function BillingPage() {
           <CardDescription>Send payment reminders for pending and overdue invoices</CardDescription>
         </CardHeader>
         <CardContent>
-          <InvoiceTable invoices={invoices} showTabs />
+          {loading ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">Loading invoices…</p>
+          ) : invoices.length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              No invoices yet. Create your first one to get started.
+            </p>
+          ) : (
+            <InvoiceTable invoices={invoices} showTabs />
+          )}
         </CardContent>
       </Card>
     </div>

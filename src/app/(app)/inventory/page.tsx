@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { AlertTriangle, Boxes, IndianRupee, PackageX, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -5,16 +7,18 @@ import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { InventoryTable } from "@/components/inventory/inventory-table";
 import { PageHeader } from "@/components/layout/page-header";
-import { inventoryItems } from "@/lib/mock-data";
+import { useInventoryItems } from "@/lib/firestore/inventory";
 import { formatINR } from "@/lib/format";
 
 export default function InventoryPage() {
-  const totalSkus = inventoryItems.length;
-  const lowStock = inventoryItems.filter(
+  const { items, loading } = useInventoryItems();
+
+  const totalSkus = items.length;
+  const lowStock = items.filter(
     (i) => i.reorderLevel > 0 && i.quantity > 0 && i.quantity <= i.reorderLevel
   ).length;
-  const outOfStock = inventoryItems.filter((i) => i.reorderLevel > 0 && i.quantity === 0).length;
-  const inventoryValue = inventoryItems.reduce((sum, i) => sum + i.quantity * i.unitCost, 0);
+  const outOfStock = items.filter((i) => i.reorderLevel > 0 && i.quantity === 0).length;
+  const inventoryValue = items.reduce((sum, i) => sum + i.quantity * i.unitCost, 0);
 
   return (
     <div className="space-y-6">
@@ -42,7 +46,15 @@ export default function InventoryPage() {
           <CardDescription>Raw materials, accessories, and digitized designs</CardDescription>
         </CardHeader>
         <CardContent>
-          <InventoryTable items={inventoryItems} />
+          {loading ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">Loading inventory…</p>
+          ) : items.length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              No inventory items yet. Add your first material or design.
+            </p>
+          ) : (
+            <InventoryTable items={items} />
+          )}
         </CardContent>
       </Card>
     </div>

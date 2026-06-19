@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { Banknote, Building2, Plus, User } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -5,10 +7,12 @@ import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { ClientsTable } from "@/components/clients/clients-table";
 import { PageHeader } from "@/components/layout/page-header";
-import { clients } from "@/lib/mock-data";
+import { useClients } from "@/lib/firestore/clients";
 import { formatINR } from "@/lib/format";
 
 export default function ClientsPage() {
+  const { clients, loading } = useClients();
+
   const firmCount = clients.filter((c) => c.type === "Firm").length;
   const individualCount = clients.filter((c) => c.type === "Individual").length;
   const totalOutstanding = clients.reduce((sum, c) => sum + c.outstanding, 0);
@@ -38,7 +42,15 @@ export default function ClientsPage() {
           <CardDescription>Firm and individual client profiles</CardDescription>
         </CardHeader>
         <CardContent>
-          <ClientsTable clients={clients} />
+          {loading ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">Loading clients…</p>
+          ) : clients.length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              No clients yet. Add your first firm or individual client.
+            </p>
+          ) : (
+            <ClientsTable clients={clients} />
+          )}
         </CardContent>
       </Card>
     </div>
