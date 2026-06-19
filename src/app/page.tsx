@@ -1,25 +1,21 @@
 import { Banknote, ClipboardList, PackageX, Receipt } from "lucide-react";
 import { StatCard } from "@/components/dashboard/stat-card";
+import { QuickActions } from "@/components/dashboard/quick-actions";
 import { RevenueChart } from "@/components/dashboard/revenue-chart";
 import { StockAlerts } from "@/components/dashboard/stock-alerts";
 import { RecentInvoices } from "@/components/dashboard/recent-invoices";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
 import { ActiveOrders } from "@/components/dashboard/active-orders";
+import { PageHeader } from "@/components/layout/page-header";
 import { stats } from "@/lib/mock-data";
-
-function formatINR(amount: number) {
-  return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(
-    amount
-  );
-}
+import { formatINR } from "@/lib/format";
 
 export default function DashboardPage() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold tracking-tight">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">Overview of billing, inventory, and production</p>
-      </div>
+      <PageHeader title="Dashboard" description="Overview of billing, inventory, and production" />
+
+      <QuickActions />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
