@@ -16,14 +16,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { type Invoice } from "@/lib/mock-data";
 import { formatINR } from "@/lib/format";
+import { buildWhatsAppLink } from "@/lib/whatsapp";
 import { cn } from "@/lib/utils";
 
 type Channel = "email" | "sms" | "whatsapp";
 
 const channels: { id: Channel; label: string; icon: typeof Mail }[] = [
   { id: "email", label: "Email", icon: Mail },
-  { id: "sms", label: "SMS", icon: MessageCircle },
-  { id: "whatsapp", label: "WhatsApp", icon: Phone },
+  { id: "sms", label: "SMS", icon: Phone },
+  { id: "whatsapp", label: "WhatsApp", icon: MessageCircle },
 ];
 
 function defaultMessage(invoice: Invoice) {
@@ -48,6 +49,15 @@ export function FollowUpSheet({
 
   function handleSend() {
     setSending(true);
+
+    if (channel === "whatsapp") {
+      window.open(buildWhatsAppLink(invoice.clientPhone, message), "_blank");
+      setSending(false);
+      setOpen(false);
+      onSent?.();
+      return;
+    }
+
     setTimeout(() => {
       setSending(false);
       setOpen(false);

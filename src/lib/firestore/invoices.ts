@@ -37,6 +37,25 @@ export function useInvoices() {
   return { invoices, loading };
 }
 
+export function useInvoice(id: string) {
+  const [invoice, setInvoice] = useState<Invoice | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(
+      doc(db, COLLECTION, id),
+      (snapshot) => {
+        setInvoice(snapshot.exists() ? { ...(snapshot.data() as Omit<Invoice, "id">), id: snapshot.id } : null);
+        setLoading(false);
+      },
+      () => setLoading(false)
+    );
+    return unsubscribe;
+  }, [id]);
+
+  return { invoice, loading };
+}
+
 export async function createInvoice(data: Omit<Invoice, "id">) {
   await addDoc(collection(db, COLLECTION), { ...data, createdAt: serverTimestamp() });
 }

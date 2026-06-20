@@ -3,6 +3,13 @@
 
 export type InvoiceStatus = "paid" | "pending" | "overdue";
 
+export type InvoiceLineItem = {
+  description: string;
+  quantity: number;
+  rate: number;
+  inventoryItemId?: string;
+};
+
 export type Invoice = {
   id: string;
   firm: string;
@@ -11,6 +18,14 @@ export type Invoice = {
   status: InvoiceStatus;
   dueDate: string;
   initials: string;
+  clientId?: string;
+  clientPhone?: string;
+  invoiceDate?: string;
+  lineItems?: InvoiceLineItem[];
+  subtotal?: number;
+  taxRate?: number;
+  tax?: number;
+  notes?: string;
 };
 
 export type InventoryCategory = "Thread" | "Fabric" | "Backing" | "Accessory" | "Design";

@@ -1,8 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
+import { Eye, MessageCircle } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -15,6 +18,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FollowUpSheet } from "@/components/billing/follow-up-sheet";
 import { type Invoice, type InvoiceStatus } from "@/lib/mock-data";
 import { markReminderSent } from "@/lib/firestore/invoices";
+import { buildWhatsAppLink, buildInvoiceMessage } from "@/lib/whatsapp";
 import { formatINR } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -91,7 +95,11 @@ export function InvoiceTable({
                   </div>
                 </div>
               </TableCell>
-              <TableCell className="text-sm text-muted-foreground">{invoice.id}</TableCell>
+              <TableCell className="text-sm text-muted-foreground">
+                <Link href={`/billing/${invoice.id}`} className="hover:text-foreground hover:underline">
+                  {invoice.id}
+                </Link>
+              </TableCell>
               <TableCell className="text-sm text-muted-foreground">{invoice.dueDate}</TableCell>
               <TableCell>
                 <Badge variant="outline" className={cn("capitalize", statusStyles[invoice.status])}>
@@ -102,22 +110,44 @@ export function InvoiceTable({
                 {formatINR(invoice.amount)}
               </TableCell>
               <TableCell className="text-right">
-                {invoice.status !== "paid" ? (
-                  <FollowUpSheet
-                    invoice={invoice}
-                    sent={sentIds.has(invoice.id)}
-                    onSent={() => {
-                      setSentIds((prev) => {
-                        const next = new Set(prev);
-                        next.add(invoice.id);
-                        return next;
-                      });
-                      void markReminderSent(invoice.id);
-                    }}
-                  />
-                ) : (
-                  <span className="text-xs text-muted-foreground">—</span>
-                )}
+                <div className="flex items-center justify-end gap-1">
+                  {invoice.status !== "paid" && (
+                    <FollowUpSheet
+                      invoice={invoice}
+                      sent={sentIds.has(invoice.id)}
+                      onSent={() => {
+                        setSentIds((prev) => {
+                          const next = new Set(prev);
+                          next.add(invoice.id);
+                          return next;
+                        });
+                        void markReminderSent(invoice.id);
+                      }}
+                    />
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    render={<Link href={`/billing/${invoice.id}`} />}
+                    aria-label="View and print invoice"
+                  >
+                    <Eye className="size-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    render={
+                      <a
+                        href={buildWhatsAppLink(invoice.clientPhone, buildInvoiceMessage(invoice))}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      />
+                    }
+                    aria-label="Send invoice via WhatsApp"
+                  >
+                    <MessageCircle className="size-3.5" />
+                  </Button>
+                </div>
               </TableCell>
             </TableRow>
           ))}

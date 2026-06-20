@@ -15,6 +15,7 @@ import {
   signOut as firebaseSignOut,
   createUserWithEmailAndPassword,
   updateProfile,
+  updatePassword,
   type User,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
@@ -26,6 +27,8 @@ type AuthContextValue = {
   signUp: (name: string, email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
+  updateDisplayName: (name: string) => Promise<void>;
+  changePassword: (newPassword: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -61,8 +64,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await firebaseSignOut(auth);
   }
 
+  async function updateDisplayName(name: string) {
+    if (!auth.currentUser) return;
+    await updateProfile(auth.currentUser, { displayName: name });
+    setUser({ ...auth.currentUser });
+  }
+
+  async function changePassword(newPassword: string) {
+    if (!auth.currentUser) return;
+    await updatePassword(auth.currentUser, newPassword);
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, signInWithGoogle, signOut }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        signIn,
+        signUp,
+        signInWithGoogle,
+        signOut,
+        updateDisplayName,
+        changePassword,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

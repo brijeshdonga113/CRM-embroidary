@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bell, Menu, Plus, Scissors, Search } from "lucide-react";
+import { Bell, Menu, Scissors, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -31,7 +31,7 @@ export function Topbar() {
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b bg-background/80 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b bg-background/80 px-4 backdrop-blur print:hidden supports-[backdrop-filter]:bg-background/60 md:px-6">
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger render={<Button variant="ghost" size="icon" className="md:hidden" />}>
           <Menu className="size-5" />
@@ -55,15 +55,6 @@ export function Topbar() {
       </div>
 
       <div className="ml-auto flex items-center gap-2">
-        <Button
-          size="sm"
-          className="hidden gap-1.5 sm:inline-flex"
-          render={<Link href="/billing/new" />}
-        >
-          <Plus className="size-4" />
-          New Invoice
-        </Button>
-
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="size-5" />
           <span className="absolute right-2 top-2 size-1.5 rounded-full bg-destructive" />
@@ -80,6 +71,7 @@ export function Topbar() {
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuLabel>{user?.displayName || user?.email || "Account"}</DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem render={<Link href="/profile" />}>Profile</DropdownMenuItem>
             <DropdownMenuItem render={<Link href="/settings" />}>Account settings</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem variant="destructive" onClick={handleLogout}>

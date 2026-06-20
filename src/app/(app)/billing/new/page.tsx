@@ -14,6 +14,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { FormField } from "@/components/forms/form-field";
 import { FormFooter } from "@/components/forms/form-footer";
 import { useClients } from "@/lib/firestore/clients";
+import { useInventoryItems } from "@/lib/firestore/inventory";
 import { createInvoice } from "@/lib/firestore/invoices";
 import { formatINR, formatDateDisplay } from "@/lib/format";
 
@@ -22,16 +23,20 @@ type LineItem = {
   description: string;
   quantity: number;
   rate: number;
+  inventoryItemId: string;
 };
+
+const CUSTOM_ITEM = "__custom__";
 
 let nextId = 1;
 function createLineItem(): LineItem {
-  return { id: `line-${nextId++}`, description: "", quantity: 1, rate: 0 };
+  return { id: `line-${nextId++}`, description: "", quantity: 1, rate: 0, inventoryItemId: CUSTOM_ITEM };
 }
 
 export default function NewInvoicePage() {
   const router = useRouter();
   const { clients, loading: clientsLoading } = useClients();
+  const { items: inventoryItems, loading: inventoryLoading } = useInventoryItems();
 
   const [clientId, setClientId] = useState("");
   const [invoiceDate, setInvoiceDate] = useState("");
@@ -53,6 +58,20 @@ export default function NewInvoicePage() {
 
   function updateLine(id: string, patch: Partial<LineItem>) {
     setLineItems((prev) => prev.map((item) => (item.id === id ? { ...item, ...patch } : item)));
+  }
+
+  function selectInventoryItem(id: string, inventoryItemId: string) {
+    if (inventoryItemId === CUSTOM_ITEM) {
+      updateLine(id, { inventoryItemId });
+      return;
+    }
+    const item = inventoryItems.find((i) => i.id === inventoryItemId);
+    if (!item) return;
+    updateLine(id, {
+      inventoryItemId,
+      description: item.name,
+      rate: item.unitCost,
+    });
   }
 
   function addLine() {
@@ -81,6 +100,19 @@ export default function NewInvoicePage() {
         status: "pending",
         dueDate: formatDateDisplay(dueDate),
         initials: client.initials,
+        clientId: client.id,
+        clientPhone: client.phone,
+        invoiceDate: formatDateDisplay(invoiceDate),
+        lineItems: lineItems.map(({ description, quantity, rate, inventoryItemId }) => ({
+          description,
+          quantity,
+          rate,
+          ...(inventoryItemId !== CUSTOM_ITEM ? { inventoryItemId } : {}),
+        })),
+        subtotal,
+        taxRate,
+        tax,
+        ...(notes ? { notes } : {}),
       });
       router.push("/billing");
     } catch (err) {
@@ -139,6 +171,7 @@ export default function NewInvoicePage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b bg-muted/40 text-left text-xs text-muted-foreground">
+                      <th className="w-44 px-3 py-2 font-medium">Inventory Item</th>
                       <th className="px-3 py-2 font-medium">Description</th>
                       <th className="w-24 px-3 py-2 text-right font-medium">Qty</th>
                       <th className="w-32 px-3 py-2 text-right font-medium">Rate (₹)</th>
@@ -149,6 +182,20 @@ export default function NewInvoicePage() {
                   <tbody>
                     {lineItems.map((item) => (
                       <tr key={item.id} className="border-b last:border-0">
+                        <td className="px-3 py-2">
+                          <NativeSelect
+                            value={item.inventoryItemId}
+                            onChange={(e) => selectInventoryItem(item.id, e.target.value)}
+                            disabled={inventoryLoading}
+                          >
+                            <option value={CUSTOM_ITEM}>Custom item</option>
+                            {inventoryItems.map((inv) => (
+                              <option key={inv.id} value={inv.id}>
+                                {inv.name}
+                              </option>
+                            ))}
+                          </NativeSelect>
+                        </td>
                         <td className="px-3 py-2">
                           <Input
                             value={item.description}

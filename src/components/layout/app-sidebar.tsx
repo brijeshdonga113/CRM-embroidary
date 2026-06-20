@@ -3,7 +3,7 @@ import { SidebarNav } from "./sidebar-nav";
 
 export function AppSidebar() {
   return (
-    <aside className="hidden w-64 shrink-0 border-r bg-card md:flex md:flex-col">
+    <aside className="hidden w-64 shrink-0 border-r bg-card print:hidden md:flex md:flex-col">
       <div className="flex h-16 items-center gap-2 px-6">
         <div className="flex size-7 items-center justify-center rounded-md bg-foreground text-background">
           <Scissors className="size-4" strokeWidth={2} />
