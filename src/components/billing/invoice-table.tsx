@@ -16,10 +16,11 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FollowUpSheet } from "@/components/billing/follow-up-sheet";
+import { EditInvoiceSheet } from "@/components/billing/edit-invoice-sheet";
 import { type Invoice, type InvoiceStatus } from "@/lib/mock-data";
 import { markReminderSent } from "@/lib/firestore/invoices";
 import { buildWhatsAppLink, buildInvoiceMessage } from "@/lib/whatsapp";
-import { formatINR } from "@/lib/format";
+import { formatINR, formatDateDisplay } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 const statusStyles: Record<InvoiceStatus, string> = {
@@ -74,11 +75,10 @@ export function InvoiceTable({
         <TableHeader>
           <TableRow>
             <TableHead>Firm / Client</TableHead>
-            <TableHead>Invoice</TableHead>
             <TableHead>Due date</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="text-right">Amount</TableHead>
-            <TableHead className="text-right">Action</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -96,11 +96,8 @@ export function InvoiceTable({
                 </div>
               </TableCell>
               <TableCell className="text-sm text-muted-foreground">
-                <Link href={`/billing/${invoice.id}`} className="hover:text-foreground hover:underline">
-                  {invoice.id}
-                </Link>
+                {formatDateDisplay(invoice.dueDate)}
               </TableCell>
-              <TableCell className="text-sm text-muted-foreground">{invoice.dueDate}</TableCell>
               <TableCell>
                 <Badge variant="outline" className={cn("capitalize", statusStyles[invoice.status])}>
                   {invoice.status}
@@ -125,6 +122,7 @@ export function InvoiceTable({
                       }}
                     />
                   )}
+                  <EditInvoiceSheet invoice={invoice} />
                   <Button
                     variant="ghost"
                     size="icon-sm"

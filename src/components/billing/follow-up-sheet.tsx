@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { type Invoice } from "@/lib/mock-data";
-import { formatINR } from "@/lib/format";
+import { formatINR, formatDateDisplay } from "@/lib/format";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 import { cn } from "@/lib/utils";
 
@@ -30,7 +30,7 @@ const channels: { id: Channel; label: string; icon: typeof Mail }[] = [
 function defaultMessage(invoice: Invoice) {
   return `Hi ${invoice.contact}, this is a friendly reminder that invoice ${invoice.id} for ${formatINR(
     invoice.amount
-  )} (due ${invoice.dueDate}) from Stitchworks is still ${invoice.status}. Please arrange payment at your earliest convenience. Thank you!`;
+  )} (due ${formatDateDisplay(invoice.dueDate)}) from Stitchworks is still ${invoice.status}. Please arrange payment at your earliest convenience. Thank you!`;
 }
 
 export function FollowUpSheet({
@@ -104,7 +104,7 @@ export function FollowUpSheet({
             </div>
             <div className="text-right">
               <p className="font-medium">{formatINR(invoice.amount)}</p>
-              <p className="text-xs text-muted-foreground">Due {invoice.dueDate}</p>
+              <p className="text-xs text-muted-foreground">Due {formatDateDisplay(invoice.dueDate)}</p>
             </div>
           </div>
 

@@ -3,10 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bell, Menu, Scissors, Search } from "lucide-react";
+import { Bell, Menu, Scissors } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { GlobalSearch } from "@/components/layout/global-search";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,10 +49,7 @@ export function Topbar() {
         </SheetContent>
       </Sheet>
 
-      <div className="relative flex-1 max-w-md">
-        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input placeholder="Search invoices, clients, stock…" className="pl-9" />
-      </div>
+      <GlobalSearch />
 
       <div className="ml-auto flex items-center gap-2">
         <Button variant="ghost" size="icon" className="relative">

@@ -1,5 +1,5 @@
 import { type Invoice } from "@/lib/mock-data";
-import { formatINR } from "@/lib/format";
+import { formatINR, formatDateDisplay } from "@/lib/format";
 
 export function buildWhatsAppLink(phone: string | undefined, message: string) {
   const text = encodeURIComponent(message);
@@ -18,5 +18,5 @@ export function buildInvoiceMessage(invoice: Invoice) {
     : "";
   return `Hi ${invoice.contact}, here is invoice ${invoice.id} from Stitchworks Embroidery.${items}\n\nTotal: ${formatINR(
     invoice.amount
-  )}\nDue: ${invoice.dueDate}\nStatus: ${invoice.status}\n\nThank you for your business!`;
+  )}\nDue: ${formatDateDisplay(invoice.dueDate)}\nStatus: ${invoice.status}\n\nThank you for your business!`;
 }

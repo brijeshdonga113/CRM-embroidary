@@ -132,3 +132,14 @@
     @apply font-sans;
   }
 }
+
+/* Zero page margin suppresses the browser's auto-injected print header/footer
+   (title, URL, date, page number) — restore visual whitespace on body instead. */
+@media print {
+  @page {
+    margin: 0;
+  }
+  body {
+    margin: 14mm 12mm;
+  }
+}

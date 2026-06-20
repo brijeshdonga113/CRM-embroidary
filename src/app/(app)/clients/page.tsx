@@ -8,14 +8,16 @@ import { StatCard } from "@/components/dashboard/stat-card";
 import { ClientsTable } from "@/components/clients/clients-table";
 import { PageHeader } from "@/components/layout/page-header";
 import { useClients } from "@/lib/firestore/clients";
+import { useClientBillingTotals } from "@/lib/firestore/billing-summary";
 import { formatINR } from "@/lib/format";
 
 export default function ClientsPage() {
   const { clients, loading } = useClients();
+  const { totalsByClientId } = useClientBillingTotals();
 
   const firmCount = clients.filter((c) => c.type === "Firm").length;
   const individualCount = clients.filter((c) => c.type === "Individual").length;
-  const totalOutstanding = clients.reduce((sum, c) => sum + c.outstanding, 0);
+  const totalOutstanding = Object.values(totalsByClientId).reduce((sum, t) => sum + t.outstanding, 0);
 
   return (
     <div className="space-y-6">

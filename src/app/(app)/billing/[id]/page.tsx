@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useInvoice } from "@/lib/firestore/invoices";
-import { formatINR } from "@/lib/format";
+import { formatINR, formatDateDisplay } from "@/lib/format";
 import { buildWhatsAppLink, buildInvoiceMessage } from "@/lib/whatsapp";
 import { type InvoiceStatus } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
@@ -86,9 +86,15 @@ export default function InvoiceDetailPage({ params }: { params: { id: string } }
             </div>
             <div>
               <p className="text-xs font-medium text-muted-foreground">Invoice Date</p>
-              <p className="mt-1 text-sm">{invoice.invoiceDate || "—"}</p>
+              <p className="mt-1 text-sm">{invoice.invoiceDate ? formatDateDisplay(invoice.invoiceDate) : "—"}</p>
               <p className="mt-3 text-xs font-medium text-muted-foreground">Due Date</p>
-              <p className="mt-1 text-sm">{invoice.dueDate}</p>
+              <p className="mt-1 text-sm">{formatDateDisplay(invoice.dueDate)}</p>
+              {invoice.reminderDate && (
+                <>
+                  <p className="mt-3 text-xs font-medium text-muted-foreground">Reminder Date</p>
+                  <p className="mt-1 text-sm">{formatDateDisplay(invoice.reminderDate)}</p>
+                </>
+              )}
             </div>
             <div>
               <p className="text-xs font-medium text-muted-foreground">Status</p>

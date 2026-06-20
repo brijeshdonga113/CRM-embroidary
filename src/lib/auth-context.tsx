@@ -18,7 +18,17 @@ import {
   updatePassword,
   type User,
 } from "firebase/auth";
+import { getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import { auth } from "@/lib/firebase";
+import { userDoc } from "@/lib/firestore/helpers";
+
+async function ensureUserDoc(uid: string, defaults: { businessName?: string; email?: string }) {
+  const ref = userDoc(uid);
+  const snapshot = await getDoc(ref);
+  if (!snapshot.exists()) {
+    await setDoc(ref, { ...defaults, createdAt: serverTimestamp() });
+  }
+}
 
 type AuthContextValue = {
   user: User | null;
@@ -54,10 +64,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (name) {
       await updateProfile(credential.user, { displayName: name });
     }
+    await ensureUserDoc(credential.user.uid, { businessName: name, email });
   }
 
   async function signInWithGoogle() {
-    await signInWithPopup(auth, new GoogleAuthProvider());
+    const credential = await signInWithPopup(auth, new GoogleAuthProvider());
+    await ensureUserDoc(credential.user.uid, {
+      businessName: credential.user.displayName ?? "",
+      email: credential.user.email ?? "",
+    });
   }
 
   async function signOut() {

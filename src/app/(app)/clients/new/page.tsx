@@ -38,8 +38,6 @@ export default function NewClientPage() {
         email,
         phone,
         address,
-        totalBilled: 0,
-        outstanding: 0,
         initials: getInitials(name),
       });
       router.push("/clients");

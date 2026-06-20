@@ -2,27 +2,27 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    function isSignedIn() {
-      return request.auth != null;
-    }
+    // Per-user workspace: each signed-in user owns a `users/{uid}` document
+    // (general business info) plus subcollections for their own data.
+    // No cross-user access — uid in the path must match the caller's uid.
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
 
-    // Single-workspace model: any signed-in user (your staff) has full
-    // access to all business data. Revisit if you need per-user scoping
-    // or role-based permissions later.
-    match /invoices/{invoiceId} {
-      allow read, write: if isSignedIn();
-    }
-    match /clients/{clientId} {
-      allow read, write: if isSignedIn();
-    }
-    match /inventoryItems/{itemId} {
-      allow read, write: if isSignedIn();
-    }
-    match /stockMovements/{movementId} {
-      allow read, write: if isSignedIn();
-    }
-    match /orders/{orderId} {
-      allow read, write: if isSignedIn();
+      match /clients/{clientId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+      match /inventoryItems/{itemId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+      match /billings/{billingId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+      match /stockMovements/{movementId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+      match /orders/{orderId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
     }
 
     match /{document=**} {

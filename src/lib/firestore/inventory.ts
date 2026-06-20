@@ -1,45 +1,47 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  addDoc,
-  collection,
-  deleteDoc,
-  doc,
-  increment,
-  onSnapshot,
-  orderBy,
-  query,
-  serverTimestamp,
-  updateDoc,
-} from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { addDoc, deleteDoc, increment, onSnapshot, orderBy, query, serverTimestamp, updateDoc } from "firebase/firestore";
+import { useAuth } from "@/lib/auth-context";
+import { getUid, toMillis, userCollection, userDocIn } from "@/lib/firestore/helpers";
 import type { InventoryItem } from "@/lib/mock-data";
 
 const COLLECTION = "inventoryItems";
 
 export function useInventoryItems() {
+  const { user } = useAuth();
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const q = query(collection(db, COLLECTION), orderBy("createdAt", "desc"));
+    if (!user) {
+      setItems([]);
+      setLoading(false);
+      return;
+    }
+    const q = query(userCollection(user.uid, COLLECTION), orderBy("createdAt", "desc"));
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        setItems(snapshot.docs.map((d) => ({ ...(d.data() as Omit<InventoryItem, "id">), id: d.id })));
+        setItems(
+          snapshot.docs.map((d) => {
+            const data = d.data();
+            return { ...(data as Omit<InventoryItem, "id">), id: d.id, createdAt: toMillis(data.createdAt) };
+          })
+        );
         setLoading(false);
       },
       () => setLoading(false)
     );
     return unsubscribe;
-  }, []);
+  }, [user]);
 
   return { items, loading };
 }
 
 export async function createInventoryItem(data: Omit<InventoryItem, "id">, designFileUrl?: string) {
-  await addDoc(collection(db, COLLECTION), {
+  const uid = getUid();
+  await addDoc(userCollection(uid, COLLECTION), {
     ...data,
     ...(designFileUrl ? { designFileUrl } : {}),
     createdAt: serverTimestamp(),
@@ -47,9 +49,11 @@ export async function createInventoryItem(data: Omit<InventoryItem, "id">, desig
 }
 
 export async function adjustInventoryQuantity(id: string, delta: number) {
-  await updateDoc(doc(db, COLLECTION, id), { quantity: increment(delta) });
+  const uid = getUid();
+  await updateDoc(userDocIn(uid, COLLECTION, id), { quantity: increment(delta) });
 }
 
 export async function deleteInventoryItem(id: string) {
-  await deleteDoc(doc(db, COLLECTION, id));
+  const uid = getUid();
+  await deleteDoc(userDocIn(uid, COLLECTION, id));
 }

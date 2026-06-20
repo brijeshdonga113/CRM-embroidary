@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Check } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,24 +10,30 @@ import { NativeSelect } from "@/components/ui/native-select";
 import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/layout/page-header";
 import { FormField } from "@/components/forms/form-field";
+import { useUserProfile, updateUserProfile, type NotificationPrefs } from "@/lib/firestore/user-profile";
 import { cn } from "@/lib/utils";
 
-function useSectionSave() {
-  const [state, setState] = useState<"idle" | "saving" | "saved">("idle");
+type SaveState = "idle" | "saving" | "saved" | "error";
 
-  function handleSubmit(e: React.FormEvent) {
+function useSectionSave(onSubmit: () => Promise<void>) {
+  const [state, setState] = useState<SaveState>("idle");
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setState("saving");
-    setTimeout(() => {
+    try {
+      await onSubmit();
       setState("saved");
       setTimeout(() => setState("idle"), 1800);
-    }, 500);
+    } catch {
+      setState("error");
+    }
   }
 
   return { state, handleSubmit };
 }
 
-function SaveButton({ state }: { state: "idle" | "saving" | "saved" }) {
+function SaveButton({ state }: { state: SaveState }) {
   return (
     <Button type="submit" disabled={state === "saving"} className="gap-1.5">
       {state === "saved" ? (
@@ -37,6 +43,8 @@ function SaveButton({ state }: { state: "idle" | "saving" | "saved" }) {
         </>
       ) : state === "saving" ? (
         "Saving…"
+      ) : state === "error" ? (
+        "Couldn't save — retry"
       ) : (
         "Save changes"
       )}
@@ -44,19 +52,52 @@ function SaveButton({ state }: { state: "idle" | "saving" | "saved" }) {
   );
 }
 
-const notificationOptions = [
-  { id: "payment-reminders", label: "Payment reminders", description: "Notify when invoices become overdue" },
-  { id: "low-stock", label: "Low stock alerts", description: "Notify when inventory falls below reorder level" },
-  { id: "order-updates", label: "Order updates", description: "Notify on production status changes" },
+const notificationOptions: { id: keyof NotificationPrefs; label: string; description: string }[] = [
+  { id: "paymentReminders", label: "Payment reminders", description: "Notify when invoices become overdue" },
+  { id: "lowStock", label: "Low stock alerts", description: "Notify when inventory falls below reorder level" },
+  { id: "orderUpdates", label: "Order updates", description: "Notify on production status changes" },
 ];
 
 export default function SettingsPage() {
-  const profile = useSectionSave();
-  const invoicePrefs = useSectionSave();
-  const notifications = useSectionSave();
-  const [enabledNotifications, setEnabledNotifications] = useState<Set<string>>(
-    new Set(["payment-reminders", "low-stock"])
+  const { profile, loading } = useUserProfile();
+  const hydrated = useRef(false);
+
+  const [bizName, setBizName] = useState("");
+  const [taxId, setTaxId] = useState("");
+  const [bizEmail, setBizEmail] = useState("");
+  const [bizPhone, setBizPhone] = useState("");
+  const [bizAddress, setBizAddress] = useState("");
+
+  const [invoicePrefix, setInvoicePrefix] = useState("INV-");
+  const [dueTermsDays, setDueTermsDays] = useState(15);
+  const [taxRate, setTaxRate] = useState(18);
+
+  const [notifications, setNotifications] = useState<NotificationPrefs>({
+    paymentReminders: true,
+    lowStock: true,
+    orderUpdates: false,
+  });
+
+  useEffect(() => {
+    if (loading || hydrated.current) return;
+    hydrated.current = true;
+    if (!profile) return;
+    setBizName(profile.businessName ?? "");
+    setTaxId(profile.taxId ?? "");
+    setBizEmail(profile.email ?? "");
+    setBizPhone(profile.phone ?? "");
+    setBizAddress(profile.address ?? "");
+    setInvoicePrefix(profile.invoicePrefix ?? "INV-");
+    setDueTermsDays(profile.dueTermsDays ?? 15);
+    setTaxRate(profile.taxRate ?? 18);
+    if (profile.notifications) setNotifications(profile.notifications);
+  }, [loading, profile]);
+
+  const businessProfile = useSectionSave(() =>
+    updateUserProfile({ businessName: bizName, taxId, email: bizEmail, phone: bizPhone, address: bizAddress })
   );
+  const invoicePrefs = useSectionSave(() => updateUserProfile({ invoicePrefix, dueTermsDays, taxRate }));
+  const notificationPrefs = useSectionSave(() => updateUserProfile({ notifications }));
 
   return (
     <div className="space-y-6">
@@ -68,26 +109,32 @@ export default function SettingsPage() {
           <CardDescription>Shown on invoices and client communication</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={profile.handleSubmit} className="space-y-5">
+          <form onSubmit={businessProfile.handleSubmit} className="space-y-5">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField label="Business Name" htmlFor="biz-name" required>
-                <Input id="biz-name" defaultValue="Stitchworks Embroidery" required />
+                <Input id="biz-name" value={bizName} onChange={(e) => setBizName(e.target.value)} required />
               </FormField>
               <FormField label="GST / Tax ID" htmlFor="biz-tax">
-                <Input id="biz-tax" defaultValue="27ABCDE1234F1Z5" />
+                <Input id="biz-tax" value={taxId} onChange={(e) => setTaxId(e.target.value)} />
               </FormField>
               <FormField label="Email" htmlFor="biz-email" required>
-                <Input id="biz-email" type="email" defaultValue="billing@stitchworks.in" required />
+                <Input
+                  id="biz-email"
+                  type="email"
+                  value={bizEmail}
+                  onChange={(e) => setBizEmail(e.target.value)}
+                  required
+                />
               </FormField>
               <FormField label="Phone" htmlFor="biz-phone">
-                <Input id="biz-phone" type="tel" defaultValue="+91 98200 11223" />
+                <Input id="biz-phone" type="tel" value={bizPhone} onChange={(e) => setBizPhone(e.target.value)} />
               </FormField>
               <FormField label="Address" htmlFor="biz-address" className="sm:col-span-2">
-                <Textarea id="biz-address" rows={2} defaultValue="MIDC, Andheri East, Mumbai, Maharashtra 400093" />
+                <Textarea id="biz-address" rows={2} value={bizAddress} onChange={(e) => setBizAddress(e.target.value)} />
               </FormField>
             </div>
             <div className="flex justify-end border-t pt-4">
-              <SaveButton state={profile.state} />
+              <SaveButton state={businessProfile.state} />
             </div>
           </form>
         </CardContent>
@@ -102,10 +149,14 @@ export default function SettingsPage() {
           <form onSubmit={invoicePrefs.handleSubmit} className="space-y-5">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <FormField label="Invoice Prefix" htmlFor="inv-prefix">
-                <Input id="inv-prefix" defaultValue="INV-" />
+                <Input id="inv-prefix" value={invoicePrefix} onChange={(e) => setInvoicePrefix(e.target.value)} />
               </FormField>
               <FormField label="Default Due Terms" htmlFor="inv-terms">
-                <NativeSelect id="inv-terms" defaultValue="15">
+                <NativeSelect
+                  id="inv-terms"
+                  value={String(dueTermsDays)}
+                  onChange={(e) => setDueTermsDays(Number(e.target.value))}
+                >
                   <option value="0">Due on receipt</option>
                   <option value="7">Net 7 days</option>
                   <option value="15">Net 15 days</option>
@@ -113,7 +164,14 @@ export default function SettingsPage() {
                 </NativeSelect>
               </FormField>
               <FormField label="Tax Rate (%)" htmlFor="inv-tax">
-                <Input id="inv-tax" type="number" min={0} step="0.1" defaultValue="18" />
+                <Input
+                  id="inv-tax"
+                  type="number"
+                  min={0}
+                  step="0.1"
+                  value={taxRate}
+                  onChange={(e) => setTaxRate(Number(e.target.value))}
+                />
               </FormField>
             </div>
             <div className="flex justify-end border-t pt-4">
@@ -129,15 +187,12 @@ export default function SettingsPage() {
           <CardDescription>Choose what triggers an alert</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={notifications.handleSubmit} className="space-y-5">
+          <form onSubmit={notificationPrefs.handleSubmit} className="space-y-5">
             <div className="space-y-3">
               {notificationOptions.map((option) => {
-                const enabled = enabledNotifications.has(option.id);
+                const enabled = notifications[option.id];
                 return (
-                  <div
-                    key={option.id}
-                    className="flex items-center justify-between rounded-lg border p-3"
-                  >
+                  <div key={option.id} className="flex items-center justify-between rounded-lg border p-3">
                     <Label htmlFor={option.id} className="flex-col items-start gap-0.5">
                       <span>{option.label}</span>
                       <span className="text-xs font-normal text-muted-foreground">{option.description}</span>
@@ -148,12 +203,7 @@ export default function SettingsPage() {
                       role="switch"
                       aria-checked={enabled}
                       onClick={() =>
-                        setEnabledNotifications((prev) => {
-                          const next = new Set(prev);
-                          if (next.has(option.id)) next.delete(option.id);
-                          else next.add(option.id);
-                          return next;
-                        })
+                        setNotifications((prev) => ({ ...prev, [option.id]: !prev[option.id] }))
                       }
                       className={cn(
                         "relative h-5 w-9 shrink-0 rounded-full transition-colors",
@@ -172,7 +222,7 @@ export default function SettingsPage() {
               })}
             </div>
             <div className="flex justify-end border-t pt-4">
-              <SaveButton state={notifications.state} />
+              <SaveButton state={notificationPrefs.state} />
             </div>
           </form>
         </CardContent>

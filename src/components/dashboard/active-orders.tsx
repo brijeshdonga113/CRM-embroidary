@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { useOrders } from "@/lib/firestore/orders";
 import { type Order } from "@/lib/mock-data";
+import { formatDateDisplay } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 const statusStyles: Record<Order["status"], string> = {
@@ -41,7 +42,7 @@ export function ActiveOrders() {
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium leading-tight">{order.design}</p>
                 <p className="truncate text-xs text-muted-foreground">
-                  {order.client} · {order.quantity} pcs · ETA {order.eta}
+                  {order.client} · {order.quantity} pcs · ETA {formatDateDisplay(order.eta)}
                 </p>
               </div>
               <Badge variant="outline" className={cn("shrink-0 whitespace-nowrap", statusStyles[order.status])}>

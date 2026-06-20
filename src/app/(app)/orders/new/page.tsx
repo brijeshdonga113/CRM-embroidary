@@ -11,7 +11,6 @@ import { FormField } from "@/components/forms/form-field";
 import { FormFooter } from "@/components/forms/form-footer";
 import { useClients } from "@/lib/firestore/clients";
 import { createOrder } from "@/lib/firestore/orders";
-import { formatDateDisplay } from "@/lib/format";
 import { type Order } from "@/lib/mock-data";
 
 export default function NewOrderPage() {
@@ -45,7 +44,7 @@ export default function NewOrderPage() {
         design,
         quantity: Number(quantity) || 0,
         status,
-        eta: formatDateDisplay(eta),
+        eta,
         ...(notes ? { notes } : {}),
       });
       router.push("/orders");

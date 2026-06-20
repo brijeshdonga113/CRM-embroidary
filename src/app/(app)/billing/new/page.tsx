@@ -16,7 +16,7 @@ import { FormFooter } from "@/components/forms/form-footer";
 import { useClients } from "@/lib/firestore/clients";
 import { useInventoryItems } from "@/lib/firestore/inventory";
 import { createInvoice } from "@/lib/firestore/invoices";
-import { formatINR, formatDateDisplay } from "@/lib/format";
+import { formatINR } from "@/lib/format";
 
 type LineItem = {
   id: string;
@@ -98,11 +98,11 @@ export default function NewInvoicePage() {
         contact: client.contactPerson || client.name,
         amount: total,
         status: "pending",
-        dueDate: formatDateDisplay(dueDate),
+        dueDate,
         initials: client.initials,
         clientId: client.id,
         clientPhone: client.phone,
-        invoiceDate: formatDateDisplay(invoiceDate),
+        invoiceDate,
         lineItems: lineItems.map(({ description, quantity, rate, inventoryItemId }) => ({
           description,
           quantity,
