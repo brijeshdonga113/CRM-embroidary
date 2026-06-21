@@ -2,15 +2,25 @@ import { type LucideIcon, TrendingDown, TrendingUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
+type Tone = "neutral" | "positive" | "warning" | "negative";
+
+const toneStyles: Record<Tone, string> = {
+  neutral: "bg-muted text-foreground",
+  positive: "bg-emerald-50 text-emerald-700",
+  warning: "bg-amber-50 text-amber-700",
+  negative: "bg-red-50 text-red-700",
+};
+
 type StatCardProps = {
   label: string;
   value: string;
   delta?: number;
   deltaLabel?: string;
   icon: LucideIcon;
+  tone?: Tone;
 };
 
-export function StatCard({ label, value, delta, deltaLabel, icon: Icon }: StatCardProps) {
+export function StatCard({ label, value, delta, deltaLabel, icon: Icon, tone = "neutral" }: StatCardProps) {
   const isPositive = (delta ?? 0) >= 0;
 
   return (
@@ -32,7 +42,7 @@ export function StatCard({ label, value, delta, deltaLabel, icon: Icon }: StatCa
             </div>
           )}
         </div>
-        <div className="flex size-9 items-center justify-center rounded-md bg-muted text-foreground">
+        <div className={cn("flex size-9 items-center justify-center rounded-md", toneStyles[tone])}>
           <Icon className="size-5" strokeWidth={1.75} />
         </div>
       </CardContent>

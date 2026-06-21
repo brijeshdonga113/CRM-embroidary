@@ -33,7 +33,7 @@ export default function OrdersPage() {
         <StatCard label="Total Orders" value={String(orders.length)} icon={ClipboardList} />
         <StatCard label="In Production" value={String(inProduction)} icon={Timer} />
         <StatCard label="Queued" value={String(queued)} icon={CircleCheck} />
-        <StatCard label="Delayed" value={String(delayed)} icon={AlertOctagon} />
+        <StatCard label="Delayed" value={String(delayed)} icon={AlertOctagon} tone={delayed > 0 ? "negative" : "neutral"} />
       </div>
 
       <Card>

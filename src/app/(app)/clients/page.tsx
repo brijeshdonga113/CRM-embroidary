@@ -35,7 +35,12 @@ export default function ClientsPage() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard label="Firms" value={String(firmCount)} icon={Building2} />
         <StatCard label="Individuals" value={String(individualCount)} icon={User} />
-        <StatCard label="Total Outstanding" value={formatINR(totalOutstanding)} icon={Banknote} />
+        <StatCard
+          label="Total Outstanding"
+          value={formatINR(totalOutstanding)}
+          icon={Banknote}
+          tone={totalOutstanding > 0 ? "warning" : "neutral"}
+        />
       </div>
 
       <Card>

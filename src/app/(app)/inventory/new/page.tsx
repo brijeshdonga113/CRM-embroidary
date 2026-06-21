@@ -24,6 +24,7 @@ export default function NewInventoryItemPage() {
   const [quantity, setQuantity] = useState("0");
   const [reorderLevel, setReorderLevel] = useState("0");
   const [unitCost, setUnitCost] = useState("0");
+  const [sellingPrice, setSellingPrice] = useState("0");
   const [designFile, setDesignFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,6 +45,7 @@ export default function NewInventoryItemPage() {
           quantity: Number(quantity) || 0,
           reorderLevel: Number(reorderLevel) || 0,
           unitCost: Number(unitCost) || 0,
+          sellingPrice: Number(sellingPrice) || 0,
         },
         designFileUrl
       );
@@ -124,8 +126,21 @@ export default function NewInventoryItemPage() {
                 <Input id="item-reorder" type="number" min={0} value={reorderLevel} onChange={(e) => setReorderLevel(e.target.value)} />
               </FormField>
 
-              <FormField label="Unit Cost (₹)" htmlFor="item-cost" className="sm:col-span-2">
+              <FormField label="Unit Cost (₹)" htmlFor="item-cost">
                 <Input id="item-cost" type="number" min={0} step="0.01" value={unitCost} onChange={(e) => setUnitCost(e.target.value)} />
+                <p className="text-xs text-muted-foreground">What you pay suppliers</p>
+              </FormField>
+
+              <FormField label="Selling Price (₹)" htmlFor="item-selling-price">
+                <Input
+                  id="item-selling-price"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={sellingPrice}
+                  onChange={(e) => setSellingPrice(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">What you charge clients on a bill</p>
               </FormField>
 
               {category === "Design" && (

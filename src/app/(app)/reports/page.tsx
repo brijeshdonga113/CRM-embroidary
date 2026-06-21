@@ -9,8 +9,11 @@ import {
   useTopClients,
   useInventoryValueByCategory,
   useOrderStatusBreakdown,
+  useProfitAndLoss,
 } from "@/lib/firestore/reports";
+import { orderStatusColors, orderStatusLabels, financialTone } from "@/lib/status-colors";
 import { formatINR } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 const CHART_COLORS = [
   "var(--chart-1)",
@@ -20,13 +23,6 @@ const CHART_COLORS = [
   "var(--chart-5)",
 ];
 
-const orderStatusLabel: Record<string, string> = {
-  "in-production": "In production",
-  queued: "Queued",
-  completed: "Completed",
-  delayed: "Delayed",
-};
-
 function formatCurrencyShort(value: number) {
   return `₹${(value / 1000).toFixed(0)}k`;
 }
@@ -35,12 +31,54 @@ export default function ReportsPage() {
   const { data: topClients, loading: topClientsLoading } = useTopClients(5);
   const { data: inventoryByCategory, loading: inventoryLoading } = useInventoryValueByCategory();
   const { data: orderStatus, loading: orderStatusLoading } = useOrderStatusBreakdown();
+  const { data: pnl, loading: pnlLoading } = useProfitAndLoss();
 
   return (
     <div className="space-y-6">
       <PageHeader title="Reports" description="Revenue, clients, inventory, and production at a glance" />
 
       <RevenueChart />
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base font-semibold">Profit &amp; Loss</CardTitle>
+          <CardDescription>
+            Based on paid invoices; cost of goods sold uses each item&rsquo;s current unit cost (an estimate, not
+            historical cost)
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {pnlLoading ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">Loading…</p>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div className="rounded-lg border p-4">
+                <p className="text-xs text-muted-foreground">Revenue</p>
+                <p className={cn("mt-1 text-xl font-semibold tracking-tight", financialTone.positive)}>
+                  {formatINR(pnl.revenue)}
+                </p>
+              </div>
+              <div className="rounded-lg border p-4">
+                <p className="text-xs text-muted-foreground">Cost of Goods Sold</p>
+                <p className={cn("mt-1 text-xl font-semibold tracking-tight", financialTone.negative)}>
+                  {formatINR(pnl.cogs)}
+                </p>
+              </div>
+              <div className="rounded-lg border p-4">
+                <p className="text-xs text-muted-foreground">Profit</p>
+                <p
+                  className={cn(
+                    "mt-1 text-xl font-semibold tracking-tight",
+                    pnl.profit >= 0 ? financialTone.positive : financialTone.negative
+                  )}
+                >
+                  {formatINR(pnl.profit)}
+                </p>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
@@ -129,8 +167,11 @@ export default function ReportsPage() {
               {Object.entries(orderStatus).map(([status, count]) => (
                 <div key={status} className="rounded-lg border p-4 text-center">
                   <p className="text-2xl font-semibold tracking-tight">{count}</p>
-                  <Badge variant="outline" className="mt-2">
-                    {orderStatusLabel[status] ?? status}
+                  <Badge
+                    variant="outline"
+                    className={cn("mt-2", orderStatusColors[status as keyof typeof orderStatusColors])}
+                  >
+                    {orderStatusLabels[status as keyof typeof orderStatusLabels] ?? status}
                   </Badge>
                 </div>
               ))}

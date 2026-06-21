@@ -13,6 +13,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { type InventoryCategory, type InventoryItem } from "@/lib/mock-data";
 import { formatINR } from "@/lib/format";
+import { inventoryStatusColors, financialTone } from "@/lib/status-colors";
 import { cn } from "@/lib/utils";
 
 type FilterTab = "all" | InventoryCategory;
@@ -20,11 +21,11 @@ type FilterTab = "all" | InventoryCategory;
 const categories: InventoryCategory[] = ["Thread", "Fabric", "Backing", "Accessory", "Design"];
 
 function stockStatus(item: InventoryItem) {
-  if (item.reorderLevel === 0) return { label: "N/A", className: "bg-slate-50 text-slate-600 border-slate-200" };
-  if (item.quantity === 0) return { label: "Out of stock", className: "bg-red-50 text-red-700 border-red-200" };
+  if (item.reorderLevel === 0) return { label: "N/A", className: inventoryStatusColors.notApplicable };
+  if (item.quantity === 0) return { label: "Out of stock", className: inventoryStatusColors.outOfStock };
   if (item.quantity <= item.reorderLevel)
-    return { label: "Low stock", className: "bg-amber-50 text-amber-700 border-amber-200" };
-  return { label: "In stock", className: "bg-emerald-50 text-emerald-700 border-emerald-200" };
+    return { label: "Low stock", className: inventoryStatusColors.lowStock };
+  return { label: "In stock", className: inventoryStatusColors.inStock };
 }
 
 export function InventoryTable({ items }: { items: InventoryItem[] }) {
@@ -56,6 +57,8 @@ export function InventoryTable({ items }: { items: InventoryItem[] }) {
             <TableHead className="text-right">Quantity</TableHead>
             <TableHead className="text-right">Reorder Level</TableHead>
             <TableHead className="text-right">Unit Cost</TableHead>
+            <TableHead className="text-right">Selling Price</TableHead>
+            <TableHead className="text-right">Margin</TableHead>
             <TableHead>Supplier</TableHead>
             <TableHead>Status</TableHead>
           </TableRow>
@@ -63,6 +66,7 @@ export function InventoryTable({ items }: { items: InventoryItem[] }) {
         <TableBody>
           {filtered.map((item) => {
             const status = stockStatus(item);
+            const margin = item.sellingPrice !== undefined ? item.sellingPrice - item.unitCost : undefined;
             return (
               <TableRow key={item.id}>
                 <TableCell>
@@ -78,6 +82,23 @@ export function InventoryTable({ items }: { items: InventoryItem[] }) {
                 </TableCell>
                 <TableCell className="text-right text-sm">
                   {item.unitCost ? formatINR(item.unitCost) : "—"}
+                </TableCell>
+                <TableCell className="text-right text-sm">
+                  {item.sellingPrice ? formatINR(item.sellingPrice) : "—"}
+                </TableCell>
+                <TableCell
+                  className={cn(
+                    "text-right text-sm font-medium",
+                    margin === undefined
+                      ? financialTone.neutral
+                      : margin > 0
+                        ? financialTone.positive
+                        : margin < 0
+                          ? financialTone.negative
+                          : financialTone.neutral
+                  )}
+                >
+                  {margin !== undefined ? formatINR(margin) : "—"}
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">{item.supplier}</TableCell>
                 <TableCell>

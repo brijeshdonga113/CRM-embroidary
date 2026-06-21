@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import { FormFooter } from "@/components/forms/form-footer";
 import { useClients } from "@/lib/firestore/clients";
 import { useInventoryItems } from "@/lib/firestore/inventory";
 import { createInvoice } from "@/lib/firestore/invoices";
+import { useOrder } from "@/lib/firestore/orders";
 import { formatINR } from "@/lib/format";
 
 type LineItem = {
@@ -35,8 +36,11 @@ function createLineItem(): LineItem {
 
 export default function NewInvoicePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const orderId = searchParams.get("orderId") ?? "";
   const { clients, loading: clientsLoading } = useClients();
   const { items: inventoryItems, loading: inventoryLoading } = useInventoryItems();
+  const { order, loading: orderLoading } = useOrder(orderId);
 
   const [clientId, setClientId] = useState("");
   const [invoiceDate, setInvoiceDate] = useState("");
@@ -46,6 +50,14 @@ export default function NewInvoicePage() {
   const [taxRate, setTaxRate] = useState(18);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const appliedOrderRef = useRef(false);
+  useEffect(() => {
+    if (!order || orderLoading || appliedOrderRef.current) return;
+    appliedOrderRef.current = true;
+    if (order.clientId) setClientId(order.clientId);
+    setLineItems([{ id: `line-${nextId++}`, description: order.design, quantity: order.quantity, rate: 0, inventoryItemId: CUSTOM_ITEM }]);
+  }, [order, orderLoading]);
 
   const selectedClientId = clientId || clients[0]?.id || "";
 
@@ -70,7 +82,7 @@ export default function NewInvoicePage() {
     updateLine(id, {
       inventoryItemId,
       description: item.name,
-      rate: item.unitCost,
+      rate: item.sellingPrice ?? item.unitCost,
     });
   }
 
@@ -113,6 +125,7 @@ export default function NewInvoicePage() {
         taxRate,
         tax,
         ...(notes ? { notes } : {}),
+        ...(order ? { orderId: order.id, orderRef: order.design } : {}),
       });
       router.push("/billing");
     } catch (err) {
@@ -124,6 +137,12 @@ export default function NewInvoicePage() {
   return (
     <div className="space-y-6">
       <PageHeader backHref="/billing" title="New Invoice" description="Bill a firm or individual client" />
+
+      {order && (
+        <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm text-blue-700">
+          Creating invoice for order <span className="font-medium">{order.design}</span> ({order.client})
+        </div>
+      )}
 
       <Card>
         <CardContent className="space-y-6 pt-6">

@@ -34,14 +34,14 @@ export default function PurchaseOrdersPage() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard label="Open Orders" value={String(openCount)} icon={Truck} />
-        <StatCard label="Received" value={String(receivedCount)} icon={CheckCircle2} />
+        <StatCard label="Received" value={String(receivedCount)} icon={CheckCircle2} tone="positive" />
         <StatCard label="Open Order Value" value={formatINR(openValue)} icon={IndianRupee} />
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="text-base font-semibold">Orders</CardTitle>
-          <CardDescription>Mark an order "Received" to add its items back into inventory</CardDescription>
+          <CardDescription>Mark an order &ldquo;Received&rdquo; to add its items back into inventory</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (

@@ -33,9 +33,14 @@ export default function BillingPage() {
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard label="Outstanding" value={formatINR(outstanding)} icon={Banknote} />
-        <StatCard label="Overdue Invoices" value={String(overdueCount)} icon={AlertCircle} />
-        <StatCard label="Collected" value={formatINR(paidTotal)} icon={CircleCheck} />
+        <StatCard label="Outstanding" value={formatINR(outstanding)} icon={Banknote} tone="warning" />
+        <StatCard
+          label="Overdue Invoices"
+          value={String(overdueCount)}
+          icon={AlertCircle}
+          tone={overdueCount > 0 ? "negative" : "neutral"}
+        />
+        <StatCard label="Collected" value={formatINR(paidTotal)} icon={CircleCheck} tone="positive" />
       </div>
 
       <Card>

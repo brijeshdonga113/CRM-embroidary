@@ -37,6 +37,8 @@ export type Invoice = {
   notes?: string;
   reminderDate?: string;
   payments?: InvoicePayment[];
+  orderId?: string;
+  orderRef?: string;
   createdAt?: number;
 };
 
@@ -51,6 +53,7 @@ export type InventoryItem = {
   quantity: number;
   reorderLevel: number;
   unitCost: number;
+  sellingPrice?: number;
   supplier: string;
   createdAt?: number;
 };
@@ -91,12 +94,15 @@ export type ClientBillingTotals = {
   outstanding: number;
 };
 
+export type OrderStatus = "in-production" | "queued" | "completed" | "delayed";
+
 export type Order = {
   id: string;
   client: string;
+  clientId?: string;
   design: string;
   quantity: number;
-  status: "in-production" | "queued" | "completed" | "delayed";
+  status: OrderStatus;
   eta: string;
   notes?: string;
   createdAt?: number;

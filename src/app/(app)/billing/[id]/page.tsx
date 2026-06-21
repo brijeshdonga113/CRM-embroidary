@@ -11,14 +11,8 @@ import { RecordPaymentSheet } from "@/components/billing/record-payment-sheet";
 import { useInvoice } from "@/lib/firestore/invoices";
 import { formatINR, formatDateDisplay } from "@/lib/format";
 import { buildWhatsAppLink, buildInvoiceMessage } from "@/lib/whatsapp";
-import { type InvoiceStatus } from "@/lib/mock-data";
+import { invoiceStatusColors } from "@/lib/status-colors";
 import { cn } from "@/lib/utils";
-
-const statusStyles: Record<InvoiceStatus, string> = {
-  paid: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  pending: "bg-amber-50 text-amber-700 border-amber-200",
-  overdue: "bg-red-50 text-red-700 border-red-200",
-};
 
 export default function InvoiceDetailPage({ params }: { params: { id: string } }) {
   const { invoice, loading } = useInvoice(params.id);
@@ -106,11 +100,20 @@ export default function InvoiceDetailPage({ params }: { params: { id: string } }
             </div>
             <div>
               <p className="text-xs font-medium text-muted-foreground">Status</p>
-              <Badge variant="outline" className={cn("mt-1 capitalize", statusStyles[invoice.status])}>
+              <Badge variant="outline" className={cn("mt-1 capitalize", invoiceStatusColors[invoice.status])}>
                 {invoice.status}
               </Badge>
             </div>
           </div>
+
+          {invoice.orderRef && (
+            <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-700">
+              Linked order:{" "}
+              <Link href="/orders" className="font-medium underline-offset-2 hover:underline">
+                {invoice.orderRef}
+              </Link>
+            </div>
+          )}
 
           <div className="overflow-x-auto rounded-lg border">
             <table className="w-full text-sm">

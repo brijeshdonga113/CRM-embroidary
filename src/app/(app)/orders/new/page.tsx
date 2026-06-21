@@ -41,6 +41,7 @@ export default function NewOrderPage() {
     try {
       await createOrder({
         client: client.name,
+        clientId: client.id,
         design,
         quantity: Number(quantity) || 0,
         status,

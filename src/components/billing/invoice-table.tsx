@@ -21,13 +21,8 @@ import { type Invoice, type InvoiceStatus } from "@/lib/mock-data";
 import { markReminderSent } from "@/lib/firestore/invoices";
 import { buildWhatsAppLink, buildInvoiceMessage } from "@/lib/whatsapp";
 import { formatINR, formatDateDisplay } from "@/lib/format";
+import { invoiceStatusColors } from "@/lib/status-colors";
 import { cn } from "@/lib/utils";
-
-const statusStyles: Record<InvoiceStatus, string> = {
-  paid: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  pending: "bg-amber-50 text-amber-700 border-amber-200",
-  overdue: "bg-red-50 text-red-700 border-red-200",
-};
 
 type FilterTab = "all" | InvoiceStatus;
 
@@ -104,7 +99,7 @@ export function InvoiceTable({
                 {formatDateDisplay(invoice.dueDate)}
               </TableCell>
               <TableCell>
-                <Badge variant="outline" className={cn("capitalize", statusStyles[invoice.status])}>
+                <Badge variant="outline" className={cn("capitalize", invoiceStatusColors[invoice.status])}>
                   {invoice.status}
                 </Badge>
               </TableCell>

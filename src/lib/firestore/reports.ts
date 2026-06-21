@@ -73,6 +73,37 @@ export function useInventoryValueByCategory() {
   return { data, loading };
 }
 
+/**
+ * Estimated profit & loss from paid invoices: revenue is what's actually
+ * collected, cost of goods sold is the current unit cost of every
+ * inventory-linked line item sold (an approximation — we don't track
+ * historical cost, only the inventory item's cost as of today).
+ */
+export function useProfitAndLoss() {
+  const { invoices, loading: invoicesLoading } = useInvoices();
+  const { items, loading: itemsLoading } = useInventoryItems();
+
+  const data = useMemo(() => {
+    const costById = new Map(items.map((i) => [i.id, i.unitCost]));
+    let revenue = 0;
+    let cogs = 0;
+
+    for (const invoice of invoices) {
+      if (invoice.status !== "paid") continue;
+      revenue += invoice.amount;
+      for (const li of invoice.lineItems ?? []) {
+        if (li.inventoryItemId) {
+          cogs += (costById.get(li.inventoryItemId) ?? 0) * li.quantity;
+        }
+      }
+    }
+
+    return { revenue, cogs, profit: revenue - cogs };
+  }, [invoices, items]);
+
+  return { data, loading: invoicesLoading || itemsLoading };
+}
+
 export function useOrderStatusBreakdown() {
   const { orders, loading } = useOrders();
 

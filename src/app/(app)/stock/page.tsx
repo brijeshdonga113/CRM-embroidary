@@ -37,8 +37,18 @@ export default function StockPage() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard label="Stock Value" value={formatINR(stockValue)} icon={IndianRupee} />
-        <StatCard label="Low Stock Items" value={String(lowStockCount)} icon={ArrowLeftRight} />
-        <StatCard label="Out of Stock" value={String(outOfStockCount)} icon={PackageX} />
+        <StatCard
+          label="Low Stock Items"
+          value={String(lowStockCount)}
+          icon={ArrowLeftRight}
+          tone={lowStockCount > 0 ? "warning" : "neutral"}
+        />
+        <StatCard
+          label="Out of Stock"
+          value={String(outOfStockCount)}
+          icon={PackageX}
+          tone={outOfStockCount > 0 ? "negative" : "neutral"}
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">

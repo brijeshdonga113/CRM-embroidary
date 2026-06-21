@@ -35,8 +35,13 @@ export default function InventoryPage() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Total SKUs" value={String(totalSkus)} icon={Boxes} />
-        <StatCard label="Low Stock" value={String(lowStock)} icon={AlertTriangle} />
-        <StatCard label="Out of Stock" value={String(outOfStock)} icon={PackageX} />
+        <StatCard label="Low Stock" value={String(lowStock)} icon={AlertTriangle} tone={lowStock > 0 ? "warning" : "neutral"} />
+        <StatCard
+          label="Out of Stock"
+          value={String(outOfStock)}
+          icon={PackageX}
+          tone={outOfStock > 0 ? "negative" : "neutral"}
+        />
         <StatCard label="Inventory Value" value={formatINR(inventoryValue)} icon={IndianRupee} />
       </div>
 

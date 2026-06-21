@@ -1,6 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
+import { Receipt } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { NativeSelect } from "@/components/ui/native-select";
 import {
   Table,
@@ -14,23 +17,10 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { updateOrderStatus } from "@/lib/firestore/orders";
 import { type Order } from "@/lib/mock-data";
 import { formatDateDisplay } from "@/lib/format";
+import { orderStatusColors, orderStatusLabels } from "@/lib/status-colors";
 import { cn } from "@/lib/utils";
 
 type FilterTab = "all" | Order["status"];
-
-const statusStyles: Record<Order["status"], string> = {
-  "in-production": "border-blue-200 bg-blue-50 text-blue-700",
-  queued: "border-slate-200 bg-slate-50 text-slate-700",
-  completed: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  delayed: "border-red-200 bg-red-50 text-red-700",
-};
-
-const statusLabel: Record<Order["status"], string> = {
-  "in-production": "In production",
-  queued: "Queued",
-  completed: "Completed",
-  delayed: "Delayed",
-};
 
 export function OrdersTable({ orders }: { orders: Order[] }) {
   const [tab, setTab] = useState<FilterTab>("all");
@@ -70,6 +60,7 @@ export function OrdersTable({ orders }: { orders: Order[] }) {
             <TableHead className="text-right">Quantity</TableHead>
             <TableHead className="w-44">Status</TableHead>
             <TableHead>ETA</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -83,15 +74,25 @@ export function OrdersTable({ orders }: { orders: Order[] }) {
                   value={order.status}
                   disabled={updatingId === order.id}
                   onChange={(e) => handleStatusChange(order.id, e.target.value as Order["status"])}
-                  className={cn("h-7 text-xs font-medium capitalize", statusStyles[order.status])}
+                  className={cn("h-7 text-xs font-medium capitalize", orderStatusColors[order.status])}
                 >
-                  <option value="queued">{statusLabel.queued}</option>
-                  <option value="in-production">{statusLabel["in-production"]}</option>
-                  <option value="delayed">{statusLabel.delayed}</option>
-                  <option value="completed">{statusLabel.completed}</option>
+                  <option value="queued">{orderStatusLabels.queued}</option>
+                  <option value="in-production">{orderStatusLabels["in-production"]}</option>
+                  <option value="delayed">{orderStatusLabels.delayed}</option>
+                  <option value="completed">{orderStatusLabels.completed}</option>
                 </NativeSelect>
               </TableCell>
               <TableCell className="text-sm text-muted-foreground">{formatDateDisplay(order.eta)}</TableCell>
+              <TableCell className="text-right">
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  render={<Link href={`/billing/new?orderId=${order.id}`} />}
+                  aria-label="Create invoice for this order"
+                >
+                  <Receipt className="size-3.5" />
+                </Button>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>

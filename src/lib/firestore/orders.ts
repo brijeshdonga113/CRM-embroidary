@@ -39,6 +39,31 @@ export function useOrders() {
   return { orders, loading };
 }
 
+export function useOrder(id: string) {
+  const { user } = useAuth();
+  const [order, setOrder] = useState<Order | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user || !id) {
+      setOrder(null);
+      setLoading(false);
+      return;
+    }
+    const unsubscribe = onSnapshot(
+      userDocIn(user.uid, COLLECTION, id),
+      (snapshot) => {
+        setOrder(snapshot.exists() ? { ...(snapshot.data() as Omit<Order, "id">), id: snapshot.id } : null);
+        setLoading(false);
+      },
+      () => setLoading(false)
+    );
+    return unsubscribe;
+  }, [user, id]);
+
+  return { order, loading };
+}
+
 export async function createOrder(data: Omit<Order, "id">) {
   const uid = getUid();
   await addDoc(userCollection(uid, COLLECTION), { ...data, createdAt: serverTimestamp() });

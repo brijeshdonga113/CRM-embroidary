@@ -14,23 +14,10 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { updatePurchaseOrderStatus } from "@/lib/firestore/purchase-orders";
 import { type PurchaseOrder, type PurchaseOrderStatus } from "@/lib/mock-data";
 import { formatINR, formatDateDisplay } from "@/lib/format";
+import { purchaseOrderStatusColors, purchaseOrderStatusLabels } from "@/lib/status-colors";
 import { cn } from "@/lib/utils";
 
 type FilterTab = "all" | PurchaseOrderStatus;
-
-const statusStyles: Record<PurchaseOrderStatus, string> = {
-  draft: "border-slate-200 bg-slate-50 text-slate-700",
-  ordered: "border-blue-200 bg-blue-50 text-blue-700",
-  received: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  cancelled: "border-red-200 bg-red-50 text-red-700",
-};
-
-const statusLabel: Record<PurchaseOrderStatus, string> = {
-  draft: "Draft",
-  ordered: "Ordered",
-  received: "Received",
-  cancelled: "Cancelled",
-};
 
 export function PurchaseOrderTable({ purchaseOrders }: { purchaseOrders: PurchaseOrder[] }) {
   const [tab, setTab] = useState<FilterTab>("all");
@@ -88,12 +75,12 @@ export function PurchaseOrderTable({ purchaseOrders }: { purchaseOrders: Purchas
                   value={po.status}
                   disabled={updatingId === po.id}
                   onChange={(e) => handleStatusChange(po.id, e.target.value as PurchaseOrderStatus)}
-                  className={cn("h-7 text-xs font-medium capitalize", statusStyles[po.status])}
+                  className={cn("h-7 text-xs font-medium capitalize", purchaseOrderStatusColors[po.status])}
                 >
-                  <option value="draft">{statusLabel.draft}</option>
-                  <option value="ordered">{statusLabel.ordered}</option>
-                  <option value="received">{statusLabel.received}</option>
-                  <option value="cancelled">{statusLabel.cancelled}</option>
+                  <option value="draft">{purchaseOrderStatusLabels.draft}</option>
+                  <option value="ordered">{purchaseOrderStatusLabels.ordered}</option>
+                  <option value="received">{purchaseOrderStatusLabels.received}</option>
+                  <option value="cancelled">{purchaseOrderStatusLabels.cancelled}</option>
                 </NativeSelect>
               </TableCell>
               <TableCell className="text-right text-sm font-medium">{formatINR(po.amount)}</TableCell>

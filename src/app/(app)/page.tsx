@@ -35,9 +35,14 @@ export default function DashboardPage() {
       <QuickActions />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Revenue Collected" value={formatINR(totalRevenue)} icon={Banknote} />
-        <StatCard label="Outstanding Invoices" value={formatINR(outstanding)} icon={Receipt} />
-        <StatCard label="Low Stock Items" value={String(lowStockCount)} icon={PackageX} />
+        <StatCard label="Revenue Collected" value={formatINR(totalRevenue)} icon={Banknote} tone="positive" />
+        <StatCard label="Outstanding Invoices" value={formatINR(outstanding)} icon={Receipt} tone="warning" />
+        <StatCard
+          label="Low Stock Items"
+          value={String(lowStockCount)}
+          icon={PackageX}
+          tone={lowStockCount > 0 ? "warning" : "neutral"}
+        />
         <StatCard label="Active Orders" value={String(activeOrdersCount)} icon={ClipboardList} />
       </div>
 
