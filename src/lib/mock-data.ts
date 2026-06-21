@@ -9,6 +9,7 @@ export type InvoiceLineItem = {
   quantity: number;
   rate: number;
   inventoryItemId?: string;
+  unit?: string;
 };
 
 export type InvoicePayment = {
@@ -115,6 +116,7 @@ export type PurchaseOrderLineItem = {
   quantity: number;
   rate: number;
   inventoryItemId?: string;
+  unit?: string;
 };
 
 export type PurchaseOrder = {

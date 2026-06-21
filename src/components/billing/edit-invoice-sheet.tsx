@@ -16,6 +16,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
 import { updateInvoiceDetails } from "@/lib/firestore/invoices";
+import { getBalanceDue } from "@/lib/invoice-status";
+import { formatINR } from "@/lib/format";
 import { type Invoice, type InvoiceStatus } from "@/lib/mock-data";
 
 function toDateInputValue(value: string | undefined) {
@@ -30,11 +32,13 @@ export function EditInvoiceSheet({ invoice, compact = true }: { invoice: Invoice
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const balanceDue = getBalanceDue(invoice);
+
   async function handleSave() {
     setSaving(true);
     setError(null);
     try {
-      await updateInvoiceDetails(invoice.id, {
+      await updateInvoiceDetails(invoice, {
         status,
         ...(dueDate ? { dueDate } : {}),
         ...(reminderDate ? { reminderDate } : {}),
@@ -90,9 +94,16 @@ export function EditInvoiceSheet({ invoice, compact = true }: { invoice: Invoice
               onChange={(e) => setStatus(e.target.value as InvoiceStatus)}
             >
               <option value="pending">Pending</option>
-              <option value="paid">Paid</option>
+              <option value="paid" disabled={balanceDue > 0}>
+                Paid
+              </option>
               <option value="overdue">Overdue</option>
             </NativeSelect>
+            {balanceDue > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {formatINR(balanceDue)} still outstanding — record the full payment to mark this paid.
+              </p>
+            )}
           </div>
 
           <div className="space-y-1.5">

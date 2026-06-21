@@ -23,6 +23,7 @@ type LineItem = {
   quantity: number;
   rate: number;
   inventoryItemId: string;
+  unit?: string;
 };
 
 const CUSTOM_ITEM = "__custom__";
@@ -65,7 +66,7 @@ export default function NewPurchaseOrderPage() {
     }
     const item = inventoryItems.find((i) => i.id === inventoryItemId);
     if (!item) return;
-    updateLine(id, { inventoryItemId, description: item.name, rate: item.unitCost });
+    updateLine(id, { inventoryItemId, description: item.name, rate: item.unitCost, unit: item.unit });
   }
 
   function addLine() {
@@ -93,11 +94,12 @@ export default function NewPurchaseOrderPage() {
         status: "ordered",
         ...(orderDate ? { orderDate } : {}),
         ...(expectedDate ? { expectedDate } : {}),
-        lineItems: lineItems.map(({ description, quantity, rate, inventoryItemId }) => ({
+        lineItems: lineItems.map(({ description, quantity, rate, inventoryItemId, unit }) => ({
           description,
           quantity,
           rate,
           ...(inventoryItemId !== CUSTOM_ITEM ? { inventoryItemId } : {}),
+          ...(unit ? { unit } : {}),
         })),
         subtotal,
         taxRate,

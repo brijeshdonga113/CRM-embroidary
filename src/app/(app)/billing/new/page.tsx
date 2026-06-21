@@ -25,6 +25,7 @@ type LineItem = {
   quantity: number;
   rate: number;
   inventoryItemId: string;
+  unit?: string;
 };
 
 const CUSTOM_ITEM = "__custom__";
@@ -83,6 +84,7 @@ export default function NewInvoicePage() {
       inventoryItemId,
       description: item.name,
       rate: item.sellingPrice ?? item.unitCost,
+      unit: item.unit,
     });
   }
 
@@ -115,11 +117,12 @@ export default function NewInvoicePage() {
         clientId: client.id,
         clientPhone: client.phone,
         invoiceDate,
-        lineItems: lineItems.map(({ description, quantity, rate, inventoryItemId }) => ({
+        lineItems: lineItems.map(({ description, quantity, rate, inventoryItemId, unit }) => ({
           description,
           quantity,
           rate,
           ...(inventoryItemId !== CUSTOM_ITEM ? { inventoryItemId } : {}),
+          ...(unit ? { unit } : {}),
         })),
         subtotal,
         taxRate,

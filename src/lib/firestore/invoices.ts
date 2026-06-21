@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 import { addDoc, arrayUnion, deleteDoc, onSnapshot, orderBy, query, serverTimestamp, updateDoc } from "firebase/firestore";
 import { useAuth } from "@/lib/auth-context";
 import { getUid, toMillis, userCollection, userDocIn } from "@/lib/firestore/helpers";
-import { adjustInventoryQuantity } from "@/lib/firestore/inventory";
+import { createStockMovement } from "@/lib/firestore/stock";
+import { getBalanceDue, getEffectiveStatus, getTotalPaid } from "@/lib/invoice-status";
+import { formatINR } from "@/lib/format";
 import type { Invoice, InvoicePayment } from "@/lib/mock-data";
 
 const COLLECTION = "billings";
@@ -24,13 +26,22 @@ export function useInvoices() {
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        setInvoices(
-          snapshot.docs.map((d) => {
-            const data = d.data();
-            return { ...(data as Omit<Invoice, "id">), id: d.id, createdAt: toMillis(data.createdAt) };
-          })
-        );
+        const docs = snapshot.docs.map((d) => {
+          const data = d.data();
+          return { ...(data as Omit<Invoice, "id">), id: d.id, createdAt: toMillis(data.createdAt) };
+        });
+
+        setInvoices(docs.map((invoice) => ({ ...invoice, status: getEffectiveStatus(invoice) })));
         setLoading(false);
+
+        // Self-heal: persist the pending -> overdue transition so every
+        // other reader (search, activity, reports) sees the same status.
+        for (const invoice of docs) {
+          const effective = getEffectiveStatus(invoice);
+          if (effective !== invoice.status) {
+            void updateDoc(userDocIn(user.uid, COLLECTION, invoice.id), { status: effective });
+          }
+        }
       },
       () => setLoading(false)
     );
@@ -54,7 +65,12 @@ export function useInvoice(id: string) {
     const unsubscribe = onSnapshot(
       userDocIn(user.uid, COLLECTION, id),
       (snapshot) => {
-        setInvoice(snapshot.exists() ? { ...(snapshot.data() as Omit<Invoice, "id">), id: snapshot.id } : null);
+        if (!snapshot.exists()) {
+          setInvoice(null);
+        } else {
+          const raw = { ...(snapshot.data() as Omit<Invoice, "id">), id: snapshot.id };
+          setInvoice({ ...raw, status: getEffectiveStatus(raw) });
+        }
         setLoading(false);
       },
       () => setLoading(false)
@@ -67,15 +83,28 @@ export function useInvoice(id: string) {
 
 /**
  * Creating a bill is the "minus" side of stock tracking: any line item
- * linked to an inventory item automatically decreases that item's quantity.
+ * linked to an inventory item automatically decreases that item's quantity,
+ * logged as a "stock out" movement so it shows up on the Stock page too.
  */
 export async function createInvoice(data: Omit<Invoice, "id">) {
   const uid = getUid();
   await addDoc(userCollection(uid, COLLECTION), { ...data, createdAt: serverTimestamp() });
 
+  const today = new Date().toISOString().slice(0, 10);
   for (const item of data.lineItems ?? []) {
     if (item.inventoryItemId) {
-      await adjustInventoryQuantity(item.inventoryItemId, -Math.abs(item.quantity));
+      await createStockMovement(
+        {
+          itemName: item.description,
+          type: "out",
+          quantity: item.quantity,
+          unit: item.unit ?? "",
+          date: today,
+          reference: `Billed to ${data.firm}`,
+          performedBy: "Billing",
+        },
+        item.inventoryItemId
+      );
     }
   }
 }
@@ -85,12 +114,21 @@ export async function markReminderSent(id: string) {
   await updateDoc(userDocIn(uid, COLLECTION, id), { lastReminderAt: serverTimestamp() });
 }
 
+/**
+ * Updates status/due date/reminder date. Refuses to mark an invoice "paid"
+ * unless recorded payments actually cover the full amount.
+ */
 export async function updateInvoiceDetails(
-  id: string,
+  invoice: Invoice,
   data: Partial<Pick<Invoice, "status" | "dueDate" | "reminderDate">>
 ) {
   const uid = getUid();
-  await updateDoc(userDocIn(uid, COLLECTION, id), data);
+  if (data.status === "paid" && getBalanceDue(invoice) > 0) {
+    throw new Error(
+      `Can't mark as paid — ${formatINR(getBalanceDue(invoice))} is still outstanding. Record the full payment first.`
+    );
+  }
+  await updateDoc(userDocIn(uid, COLLECTION, invoice.id), data);
 }
 
 export async function deleteInvoice(id: string) {
@@ -108,7 +146,7 @@ export async function recordInvoicePayment(invoice: Invoice, payment: Omit<Invoi
     ...payment,
     id: `pay-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
   };
-  const totalPaid = (invoice.payments ?? []).reduce((sum, p) => sum + p.amount, 0) + payment.amount;
+  const totalPaid = getTotalPaid(invoice) + payment.amount;
   const shouldMarkPaid = totalPaid >= invoice.amount && invoice.status !== "paid";
 
   await updateDoc(userDocIn(uid, COLLECTION, invoice.id), {

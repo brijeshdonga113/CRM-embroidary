@@ -16,7 +16,7 @@ export function buildInvoiceMessage(invoice: Invoice) {
         .map((li) => `• ${li.description} x${li.quantity} — ${formatINR(li.quantity * li.rate)}`)
         .join("\n")}`
     : "";
-  return `Hi ${invoice.contact}, here is invoice ${invoice.id} from Stitchworks Embroidery.${items}\n\nTotal: ${formatINR(
+  return `Hi ${invoice.contact}, here is your invoice from Stitchworks Embroidery.${items}\n\nTotal: ${formatINR(
     invoice.amount
   )}\nDue: ${formatDateDisplay(invoice.dueDate)}\nStatus: ${invoice.status}\n\nThank you for your business!`;
 }

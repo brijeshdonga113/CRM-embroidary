@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { addDoc, deleteDoc, getDoc, onSnapshot, orderBy, query, serverTimestamp, updateDoc } from "firebase/firestore";
 import { useAuth } from "@/lib/auth-context";
 import { getUid, toMillis, userCollection, userDocIn } from "@/lib/firestore/helpers";
-import { adjustInventoryQuantity } from "@/lib/firestore/inventory";
+import { createStockMovement } from "@/lib/firestore/stock";
 import type { PurchaseOrder, PurchaseOrderStatus } from "@/lib/mock-data";
 
 const COLLECTION = "purchaseOrders";
@@ -48,7 +48,8 @@ export async function createPurchaseOrder(data: Omit<PurchaseOrder, "id">) {
 /**
  * Updates a purchase order's status. Transitioning into "received" (from any
  * other status) increases inventory quantity for every line item linked to
- * an inventory item — the "plus" side of stock tracking. This only fires
+ * an inventory item — the "plus" side of stock tracking, logged as a
+ * "stock in" movement so it shows up on the Stock page. This only fires
  * once per order: re-saving while already "received" does not double-count.
  */
 export async function updatePurchaseOrderStatus(id: string, status: PurchaseOrderStatus) {
@@ -59,16 +60,28 @@ export async function updatePurchaseOrderStatus(id: string, status: PurchaseOrde
   const current = snapshot.data() as PurchaseOrder;
 
   const isNewlyReceived = status === "received" && current.status !== "received";
+  const today = new Date().toISOString().slice(0, 10);
 
   await updateDoc(ref, {
     status,
-    ...(isNewlyReceived ? { receivedDate: new Date().toISOString().slice(0, 10) } : {}),
+    ...(isNewlyReceived ? { receivedDate: today } : {}),
   });
 
   if (isNewlyReceived) {
     for (const item of current.lineItems ?? []) {
       if (item.inventoryItemId) {
-        await adjustInventoryQuantity(item.inventoryItemId, Math.abs(item.quantity));
+        await createStockMovement(
+          {
+            itemName: item.description,
+            type: "in",
+            quantity: item.quantity,
+            unit: item.unit ?? "",
+            date: today,
+            reference: `Purchase from ${current.supplier}`,
+            performedBy: "Purchase Order",
+          },
+          item.inventoryItemId
+        );
       }
     }
   }

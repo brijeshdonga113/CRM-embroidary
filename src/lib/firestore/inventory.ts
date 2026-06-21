@@ -53,6 +53,20 @@ export async function adjustInventoryQuantity(id: string, delta: number) {
   await updateDoc(userDocIn(uid, COLLECTION, id), { quantity: increment(delta) });
 }
 
+/**
+ * Edits catalog/master data for an existing item — name, SKU, category,
+ * unit, supplier, reorder level, and pricing. Quantity is intentionally
+ * excluded: stock levels only change through Stock Entries, Purchase Order
+ * receipts, or bills, so every quantity change stays in the stock ledger.
+ */
+export async function updateInventoryItem(
+  id: string,
+  data: Partial<Omit<InventoryItem, "id" | "quantity" | "createdAt">>
+) {
+  const uid = getUid();
+  await updateDoc(userDocIn(uid, COLLECTION, id), data);
+}
+
 export async function deleteInventoryItem(id: string) {
   const uid = getUid();
   await deleteDoc(userDocIn(uid, COLLECTION, id));

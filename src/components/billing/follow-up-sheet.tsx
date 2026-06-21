@@ -28,7 +28,7 @@ const channels: { id: Channel; label: string; icon: typeof Mail }[] = [
 ];
 
 function defaultMessage(invoice: Invoice) {
-  return `Hi ${invoice.contact}, this is a friendly reminder that invoice ${invoice.id} for ${formatINR(
+  return `Hi ${invoice.contact}, this is a friendly reminder that your invoice for ${formatINR(
     invoice.amount
   )} (due ${formatDateDisplay(invoice.dueDate)}) from Stitchworks is still ${invoice.status}. Please arrange payment at your earliest convenience. Thank you!`;
 }
@@ -91,9 +91,7 @@ export function FollowUpSheet({
       <SheetContent>
         <SheetHeader>
           <SheetTitle>Send payment reminder</SheetTitle>
-          <SheetDescription>
-            Follow up with {invoice.firm} about invoice {invoice.id}
-          </SheetDescription>
+          <SheetDescription>Follow up with {invoice.firm} about their outstanding invoice</SheetDescription>
         </SheetHeader>
 
         <div className="flex flex-col gap-4 px-4">
