@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Boxes, ClipboardList, Receipt, ArrowLeftRight, Building2 } from "lucide-react";
+import { Boxes, ClipboardList, Receipt, ArrowLeftRight, Building2, Truck } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { PageHeader } from "@/components/layout/page-header";
 import { useRecentActivity, type ActivityType } from "@/lib/firestore/activity";
@@ -13,6 +13,7 @@ const typeIcons: Record<ActivityType, typeof Receipt> = {
   inventory: Boxes,
   stock: ArrowLeftRight,
   order: ClipboardList,
+  "purchase-order": Truck,
 };
 
 export default function ActivityPage() {

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Boxes, Building2, ClipboardList, PackageSearch, Receipt } from "lucide-react";
+import { Boxes, Building2, ClipboardList, PackageSearch, Receipt, Truck } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 const actions = [
@@ -7,6 +7,7 @@ const actions = [
   { label: "Add Client", href: "/clients/new", icon: Building2 },
   { label: "New Order", href: "/orders/new", icon: ClipboardList },
   { label: "Add Inventory Item", href: "/inventory/new", icon: Boxes },
+  { label: "New Purchase Order", href: "/purchase-orders/new", icon: Truck },
   { label: "New Stock Entry", href: "/stock/new", icon: PackageSearch },
 ];
 
@@ -14,7 +15,7 @@ export function QuickActions() {
   return (
     <Card>
       <CardContent className="p-4">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {actions.map((action) => (
             <Link
               key={action.href}

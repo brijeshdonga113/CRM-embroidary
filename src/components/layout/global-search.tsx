@@ -2,14 +2,15 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Building2, Boxes, Receipt, Search } from "lucide-react";
+import { Building2, Boxes, Receipt, Search, Truck } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useClients } from "@/lib/firestore/clients";
 import { useInventoryItems } from "@/lib/firestore/inventory";
 import { useInvoices } from "@/lib/firestore/invoices";
+import { usePurchaseOrders } from "@/lib/firestore/purchase-orders";
 import { formatINR } from "@/lib/format";
 
-type ResultType = "client" | "inventory" | "billing";
+type ResultType = "client" | "inventory" | "billing" | "purchaseOrder";
 
 type SearchResult = {
   id: string;
@@ -23,6 +24,7 @@ const groupMeta: Record<ResultType, { label: string; icon: typeof Building2 }> =
   client: { label: "Clients", icon: Building2 },
   inventory: { label: "Inventory", icon: Boxes },
   billing: { label: "Billing", icon: Receipt },
+  purchaseOrder: { label: "Purchase Orders", icon: Truck },
 };
 
 export function GlobalSearch() {
@@ -33,6 +35,7 @@ export function GlobalSearch() {
   const { clients } = useClients();
   const { items } = useInventoryItems();
   const { invoices } = useInvoices();
+  const { purchaseOrders } = usePurchaseOrders();
 
   const results = useMemo<SearchResult[]>(() => {
     const q = query.trim().toLowerCase();
@@ -75,14 +78,26 @@ export function GlobalSearch() {
         href: `/billing/${inv.id}`,
       }));
 
-    return [...clientResults, ...inventoryResults, ...billingResults];
-  }, [query, clients, items, invoices]);
+    const purchaseOrderResults: SearchResult[] = purchaseOrders
+      .filter((po) => po.supplier.toLowerCase().includes(q) || (po.supplierContact ?? "").toLowerCase().includes(q))
+      .slice(0, 5)
+      .map((po) => ({
+        id: po.id,
+        type: "purchaseOrder",
+        title: po.supplier,
+        subtitle: `${formatINR(po.amount)} • ${po.status}`,
+        href: "/purchase-orders",
+      }));
+
+    return [...clientResults, ...inventoryResults, ...billingResults, ...purchaseOrderResults];
+  }, [query, clients, items, invoices, purchaseOrders]);
 
   const grouped = useMemo(
     () => ({
       client: results.filter((r) => r.type === "client"),
       inventory: results.filter((r) => r.type === "inventory"),
       billing: results.filter((r) => r.type === "billing"),
+      purchaseOrder: results.filter((r) => r.type === "purchaseOrder"),
     }),
     [results]
   );
@@ -120,7 +135,7 @@ export function GlobalSearch() {
           {results.length === 0 ? (
             <p className="px-2.5 py-4 text-center text-sm text-muted-foreground">No results for &ldquo;{query}&rdquo;</p>
           ) : (
-            (["client", "inventory", "billing"] as ResultType[]).map((type) =>
+            (["client", "inventory", "billing", "purchaseOrder"] as ResultType[]).map((type) =>
               grouped[type].length > 0 ? (
                 <div key={type} className="mb-1 last:mb-0">
                   <p className="px-1.5 py-1 text-xs font-medium text-muted-foreground">{groupMeta[type].label}</p>

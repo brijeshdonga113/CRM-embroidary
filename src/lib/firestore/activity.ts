@@ -6,9 +6,10 @@ import { useClients } from "@/lib/firestore/clients";
 import { useInventoryItems } from "@/lib/firestore/inventory";
 import { useStockMovements } from "@/lib/firestore/stock";
 import { useOrders } from "@/lib/firestore/orders";
+import { usePurchaseOrders } from "@/lib/firestore/purchase-orders";
 import { formatINR } from "@/lib/format";
 
-export type ActivityType = "invoice" | "client" | "inventory" | "stock" | "order";
+export type ActivityType = "invoice" | "client" | "inventory" | "stock" | "order" | "purchase-order";
 
 export type ActivityEntry = {
   id: string;
@@ -25,8 +26,10 @@ export function useRecentActivity(limit?: number) {
   const { items, loading: itemsLoading } = useInventoryItems();
   const { movements, loading: movementsLoading } = useStockMovements();
   const { orders, loading: ordersLoading } = useOrders();
+  const { purchaseOrders, loading: purchaseOrdersLoading } = usePurchaseOrders();
 
-  const loading = invoicesLoading || clientsLoading || itemsLoading || movementsLoading || ordersLoading;
+  const loading =
+    invoicesLoading || clientsLoading || itemsLoading || movementsLoading || ordersLoading || purchaseOrdersLoading;
 
   const entries = useMemo<ActivityEntry[]>(() => {
     const all: ActivityEntry[] = [];
@@ -92,9 +95,21 @@ export function useRecentActivity(limit?: number) {
       });
     }
 
+    for (const po of purchaseOrders) {
+      if (!po.createdAt) continue;
+      all.push({
+        id: `purchase-order-${po.id}`,
+        type: "purchase-order",
+        title: `Purchase order — ${po.supplier}`,
+        description: `${formatINR(po.amount)} • ${po.status}`,
+        createdAt: po.createdAt,
+        href: "/purchase-orders",
+      });
+    }
+
     all.sort((a, b) => b.createdAt - a.createdAt);
     return limit ? all.slice(0, limit) : all;
-  }, [invoices, clients, items, movements, orders, limit]);
+  }, [invoices, clients, items, movements, orders, purchaseOrders, limit]);
 
   return { entries, loading };
 }

@@ -22,7 +22,7 @@ function toDateInputValue(value: string | undefined) {
   return value && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : "";
 }
 
-export function EditInvoiceSheet({ invoice }: { invoice: Invoice }) {
+export function EditInvoiceSheet({ invoice, compact = true }: { invoice: Invoice; compact?: boolean }) {
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<InvoiceStatus>(invoice.status);
   const [dueDate, setDueDate] = useState(toDateInputValue(invoice.dueDate));
@@ -61,9 +61,17 @@ export function EditInvoiceSheet({ invoice }: { invoice: Invoice }) {
       }}
     >
       <SheetTrigger
-        render={<Button variant="ghost" size="icon-sm" aria-label="Edit invoice" />}
+        render={
+          <Button
+            variant={compact ? "ghost" : "outline"}
+            size={compact ? "icon-sm" : "sm"}
+            className={compact ? undefined : "gap-1.5"}
+            aria-label="Edit invoice"
+          />
+        }
       >
         <Pencil className="size-3.5" />
+        {!compact && "Edit"}
       </SheetTrigger>
       <SheetContent>
         <SheetHeader>

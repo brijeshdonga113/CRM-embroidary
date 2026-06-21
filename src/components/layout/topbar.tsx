@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Bell, Menu, Scissors } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { GlobalSearch } from "@/components/layout/global-search";
 import {
   DropdownMenu,
@@ -59,11 +58,9 @@ export function Topbar() {
 
         <DropdownMenu>
           <DropdownMenuTrigger render={<Button variant="ghost" className="gap-2 px-1.5" />}>
-            <Avatar className="size-7">
-              <AvatarFallback className="text-xs">
-                {getInitials(user?.displayName || user?.email || "U")}
-              </AvatarFallback>
-            </Avatar>
+            <span className="flex size-7 items-center justify-center rounded-full bg-muted text-xs text-muted-foreground">
+              {getInitials(user?.displayName || user?.email || "U")}
+            </span>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuLabel>{user?.displayName || user?.email || "Account"}</DropdownMenuLabel>

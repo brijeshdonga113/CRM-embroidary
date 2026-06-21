@@ -6,6 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { EditInvoiceSheet } from "@/components/billing/edit-invoice-sheet";
+import { RecordPaymentSheet } from "@/components/billing/record-payment-sheet";
 import { useInvoice } from "@/lib/firestore/invoices";
 import { formatINR, formatDateDisplay } from "@/lib/format";
 import { buildWhatsAppLink, buildInvoiceMessage } from "@/lib/whatsapp";
@@ -38,6 +40,9 @@ export default function InvoiceDetailPage({ params }: { params: { id: string } }
   }
 
   const whatsappHref = buildWhatsAppLink(invoice.clientPhone, buildInvoiceMessage(invoice));
+  const payments = invoice.payments ?? [];
+  const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
+  const balanceDue = Math.max(0, invoice.amount - totalPaid);
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
@@ -46,12 +51,14 @@ export default function InvoiceDetailPage({ params }: { params: { id: string } }
           <ArrowLeft className="size-3.5" />
           Back to Billing
         </Link>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <EditInvoiceSheet invoice={invoice} compact={false} />
           <Button variant="outline" size="sm" className="gap-1.5" onClick={() => window.print()}>
             <Printer className="size-3.5" />
             Print
           </Button>
           <Button
+            variant="outline"
             size="sm"
             className="gap-1.5"
             render={<a href={whatsappHref} target="_blank" rel="noopener noreferrer" />}
@@ -59,6 +66,7 @@ export default function InvoiceDetailPage({ params }: { params: { id: string } }
             <MessageCircle className="size-3.5" />
             Send via WhatsApp
           </Button>
+          {balanceDue > 0 && <RecordPaymentSheet invoice={invoice} balanceDue={balanceDue} />}
         </div>
       </div>
 
@@ -152,6 +160,18 @@ export default function InvoiceDetailPage({ params }: { params: { id: string } }
               <span>Total</span>
               <span>{formatINR(invoice.amount)}</span>
             </div>
+            {payments.length > 0 && (
+              <>
+                <div className="flex items-center justify-between text-emerald-700">
+                  <span>Amount Paid</span>
+                  <span>-{formatINR(totalPaid)}</span>
+                </div>
+                <div className="flex items-center justify-between border-t pt-2 text-base font-semibold">
+                  <span>Balance Due</span>
+                  <span>{formatINR(balanceDue)}</span>
+                </div>
+              </>
+            )}
           </div>
 
           {invoice.notes && (
@@ -164,6 +184,38 @@ export default function InvoiceDetailPage({ params }: { params: { id: string } }
           <p className="text-center text-xs text-muted-foreground">Thank you for your business!</p>
         </CardContent>
       </Card>
+
+      {payments.length > 0 && (
+        <Card className="print:ring-0 print:shadow-none">
+          <CardContent className="space-y-3 pt-6">
+            <p className="text-sm font-medium">Payment History</p>
+            <div className="overflow-x-auto rounded-lg border">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/40 text-left text-xs text-muted-foreground">
+                    <th className="px-3 py-2 font-medium">Date</th>
+                    <th className="px-3 py-2 font-medium">Method</th>
+                    <th className="px-3 py-2 font-medium">Note</th>
+                    <th className="px-3 py-2 text-right font-medium">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...payments]
+                    .sort((a, b) => a.date.localeCompare(b.date))
+                    .map((payment) => (
+                      <tr key={payment.id} className="border-b last:border-0">
+                        <td className="px-3 py-2 text-muted-foreground">{formatDateDisplay(payment.date)}</td>
+                        <td className="px-3 py-2 text-muted-foreground">{payment.method || "—"}</td>
+                        <td className="px-3 py-2 text-muted-foreground">{payment.note || "—"}</td>
+                        <td className="px-3 py-2 text-right font-medium">{formatINR(payment.amount)}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

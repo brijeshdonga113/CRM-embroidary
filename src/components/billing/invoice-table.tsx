@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
-import { Eye, MessageCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { MessageCircle } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,7 @@ export function InvoiceTable({
   limit?: number;
   showTabs?: boolean;
 }) {
+  const router = useRouter();
   const [tab, setTab] = useState<FilterTab>("all");
   const [sentIds, setSentIds] = useState<Set<string>>(new Set());
 
@@ -83,7 +84,11 @@ export function InvoiceTable({
         </TableHeader>
         <TableBody>
           {filtered.map((invoice) => (
-            <TableRow key={invoice.id}>
+            <TableRow
+              key={invoice.id}
+              onClick={() => router.push(`/billing/${invoice.id}`)}
+              className="cursor-pointer"
+            >
               <TableCell>
                 <div className="flex items-center gap-2.5">
                   <Avatar className="size-7">
@@ -106,7 +111,7 @@ export function InvoiceTable({
               <TableCell className="text-right text-sm font-medium">
                 {formatINR(invoice.amount)}
               </TableCell>
-              <TableCell className="text-right">
+              <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center justify-end gap-1">
                   {invoice.status !== "paid" && (
                     <FollowUpSheet
@@ -123,14 +128,6 @@ export function InvoiceTable({
                     />
                   )}
                   <EditInvoiceSheet invoice={invoice} />
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    render={<Link href={`/billing/${invoice.id}`} />}
-                    aria-label="View and print invoice"
-                  >
-                    <Eye className="size-3.5" />
-                  </Button>
                   <Button
                     variant="ghost"
                     size="icon-sm"

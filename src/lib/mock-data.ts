@@ -11,6 +11,14 @@ export type InvoiceLineItem = {
   inventoryItemId?: string;
 };
 
+export type InvoicePayment = {
+  id: string;
+  amount: number;
+  date: string;
+  method?: string;
+  note?: string;
+};
+
 export type Invoice = {
   id: string;
   firm: string;
@@ -28,6 +36,7 @@ export type Invoice = {
   tax?: number;
   notes?: string;
   reminderDate?: string;
+  payments?: InvoicePayment[];
   createdAt?: number;
 };
 
@@ -89,6 +98,33 @@ export type Order = {
   quantity: number;
   status: "in-production" | "queued" | "completed" | "delayed";
   eta: string;
+  notes?: string;
+  createdAt?: number;
+};
+
+export type PurchaseOrderStatus = "draft" | "ordered" | "received" | "cancelled";
+
+export type PurchaseOrderLineItem = {
+  description: string;
+  quantity: number;
+  rate: number;
+  inventoryItemId?: string;
+};
+
+export type PurchaseOrder = {
+  id: string;
+  supplier: string;
+  supplierContact?: string;
+  supplierPhone?: string;
+  status: PurchaseOrderStatus;
+  orderDate?: string;
+  expectedDate?: string;
+  receivedDate?: string;
+  lineItems: PurchaseOrderLineItem[];
+  subtotal?: number;
+  taxRate?: number;
+  tax?: number;
+  amount: number;
   notes?: string;
   createdAt?: number;
 };

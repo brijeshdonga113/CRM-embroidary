@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { addDoc, deleteDoc, onSnapshot, orderBy, query, serverTimestamp, updateDoc } from "firebase/firestore";
+import { addDoc, arrayUnion, deleteDoc, onSnapshot, orderBy, query, serverTimestamp, updateDoc } from "firebase/firestore";
 import { useAuth } from "@/lib/auth-context";
 import { getUid, toMillis, userCollection, userDocIn } from "@/lib/firestore/helpers";
-import type { Invoice } from "@/lib/mock-data";
+import { adjustInventoryQuantity } from "@/lib/firestore/inventory";
+import type { Invoice, InvoicePayment } from "@/lib/mock-data";
 
 const COLLECTION = "billings";
 
@@ -64,9 +65,19 @@ export function useInvoice(id: string) {
   return { invoice, loading };
 }
 
+/**
+ * Creating a bill is the "minus" side of stock tracking: any line item
+ * linked to an inventory item automatically decreases that item's quantity.
+ */
 export async function createInvoice(data: Omit<Invoice, "id">) {
   const uid = getUid();
   await addDoc(userCollection(uid, COLLECTION), { ...data, createdAt: serverTimestamp() });
+
+  for (const item of data.lineItems ?? []) {
+    if (item.inventoryItemId) {
+      await adjustInventoryQuantity(item.inventoryItemId, -Math.abs(item.quantity));
+    }
+  }
 }
 
 export async function markReminderSent(id: string) {
@@ -85,4 +96,23 @@ export async function updateInvoiceDetails(
 export async function deleteInvoice(id: string) {
   const uid = getUid();
   await deleteDoc(userDocIn(uid, COLLECTION, id));
+}
+
+/**
+ * Records a partial (or full) payment against an invoice. If the running
+ * total of payments reaches the invoice amount, status auto-flips to "paid".
+ */
+export async function recordInvoicePayment(invoice: Invoice, payment: Omit<InvoicePayment, "id">) {
+  const uid = getUid();
+  const newPayment: InvoicePayment = {
+    ...payment,
+    id: `pay-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+  };
+  const totalPaid = (invoice.payments ?? []).reduce((sum, p) => sum + p.amount, 0) + payment.amount;
+  const shouldMarkPaid = totalPaid >= invoice.amount && invoice.status !== "paid";
+
+  await updateDoc(userDocIn(uid, COLLECTION, invoice.id), {
+    payments: arrayUnion(newPayment),
+    ...(shouldMarkPaid ? { status: "paid" } : {}),
+  });
 }
